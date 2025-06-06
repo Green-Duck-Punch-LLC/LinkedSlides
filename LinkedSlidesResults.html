@@ -1,0 +1,512 @@
+<!--
+Linked Slides Add-on - HTML for the results dialog.
+Copyright (C) 2025 Green Duck Punch, LLC
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file is part of the Linked Slides Add-on. The Linked Slides Add-on is
+dual-licensed under the AGPLv3 and a commercial/proprietary license.
+For commercial use or specific licensing terms within Google's proprietary
+environment, please contact Green Duck Punch, LLC.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7fafc;
+      color: #2d3748;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 90%;
+      margin: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #e2e8f0; /* Tailwind gray-200 */
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background-color: #edf2f7; /* Tailwind gray-100 */
+      cursor: pointer;
+      position: relative;
+    }
+    th:hover {
+      background-color: #e2e8f0; /* Tailwind gray-200 */
+    }
+    /* Default sort arrow for all sortable columns */
+    th::after {
+      content: ' ↕'; /* Direct Unicode for up-down arrow */
+      color: #a0aec0; /* Light gray for subtlety */
+      font-size: 1.8em; /* Increased size for default arrow */
+      margin-left: 0.25rem;
+      line-height: 1; /* Helps with vertical alignment */
+    }
+    /* Specific arrows for actively sorted columns, overriding the default */
+    th.asc:after {
+      content: ' ↑';
+      color: #2d3748; /* Darker color for active sort */
+      font-size: 2em; /* Increased size for active sort arrows */
+      line-height: 1; /* Helps with vertical alignment */
+    }
+    th.desc:after {
+      content: ' ↓';
+      color: #2d3748; /* Darker color for active sort */
+      font-size: 2em; /* Increased size for active sort arrows */
+      line-height: 1; /* Helps with vertical alignment */
+    }
+    /* Dropdown styles */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+      width: 100%; /* Make dropdown take full width of th */
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute; /* Changed to absolute for portal pattern */
+      background-color: #f9f9f9;
+      min-width: 200px; /* Adjust as needed */
+      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+      z-index: 1000; /* Increased z-index */
+      padding: 10px;
+      border-radius: 0.25rem;
+      max-height: 250px; /* Scrollable if many options, adjusted for ~10 items */
+      overflow-y: auto;
+      text-align: left; /* Ensure checkboxes align left */
+    }
+    .dropdown-content label {
+      display: block;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+    .dropdown-content input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    .dropdown-button {
+      background-color: #4a5568; /* Darker gray from tailwind */
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      cursor: pointer;
+      border-radius: 0.25rem;
+      width: 100%; /* Take full width of its container */
+      text-align: center;
+      font-size: 0.75rem; /* Match text-xs */
+      font-weight: 500; /* Match font-medium */
+      line-height: 1; /* Adjust for better alignment */
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* Space out text and arrow */
+      margin-bottom: 0.5rem; /* Space between button and sort arrow */
+    }
+    .dropdown-button span {
+        flex-grow: 1; /* Allow text to grow */
+        text-align: left;
+        margin-right: 0.5rem; /* Space before arrow */
+    }
+    /* Style for the small dropdown arrow */
+    .dropdown-arrow {
+        font-size: 1.2em; /* Make it visible */
+        line-height: 1; /* Align with text */
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800"><?= dialogTitle ?></h2>
+
+    <? if (anyLinkedResults) { ?>
+      <p class="mb-4 text-gray-700">The following slides are involved in linking relationships:</p>
+    <? } else if (displayRowsJson.length > 2 && !anyLinkedResults) { // Check if displayRowsJson is not just '[]' ?>
+      <p class="mb-4 text-gray-700">No linked slides were found in the selected presentations for your currently selected slide(s).</p>
+    <? } ?>
+
+    <table class="min-w-full divide-y divide-gray-200 shadow overflow-hidden sm:rounded-lg">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" id="th-sourceSlidePageNumber" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div class="dropdown">
+                <button type="button" class="dropdown-button" data-column="sourceSlidePageNumber" data-target="filter-sourceSlidePageNumber">
+                    <span>Source Slide #</span> <span class="dropdown-arrow">▼</span>
+                </button>
+                <!-- Dropdown content will be moved here by JS -->
+            </div>
+          </th>
+          <th scope="col" id="th-targetPresentationName" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+             <div class="dropdown">
+                <button type="button" class="dropdown-button" data-column="targetPresentationName" data-target="filter-targetPresentationName">
+                    <span>Target Presentation</span> <span class="dropdown-arrow">▼</span>
+                </button>
+                <!-- Dropdown content will be moved here by JS -->
+            </div>
+          </th>
+          <th scope="col" id="th-targetSlidePageNumber" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div class="dropdown">
+                <button type="button" class="dropdown-button" data-column="targetSlidePageNumber" data-target="filter-targetSlidePageNumber">
+                    <span>Target Slide #</span> <span class="dropdown-arrow">▼</span>
+                </button>
+                <!-- Dropdown content will be moved here by JS -->
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody id="resultsTableBody" class="bg-white divide-y divide-gray-200">
+        <!-- Table rows will be rendered by JavaScript -->
+      </tbody>
+    </table>
+
+    <? if (errors && errors.length > 0) { ?>
+      <h3 class="text-xl font-semibold mt-6 mb-2 text-red-700">Errors encountered:</h3>
+      <ul class="list-disc list-inside text-red-600 space-y-1">
+        <? errors.forEach(error => { ?>
+          <li><?= error ?></li>
+        <? }); ?>
+      </ul>
+    <? } ?>
+  </div>
+
+  <!-- Global container for dropdowns to prevent clipping -->
+  <div id="global-dropdown-container"></div>
+
+  <script>
+    // Data passed from Apps Script. Using JSON.parse to ensure proper object conversion.
+    let tableData = JSON.parse('<?= displayRowsJson ?>');
+    // activePresentationId is passed from the Apps Script server-side
+    const activePresentationId = '<?= activePresentationId ?>';
+    let currentSortColumn = 'sourceSlidePageNumber'; // Default sort column
+    let sortDirection = 'asc'; // Default sort direction
+
+    // Store original data for filtering resets
+    const originalTableData = JSON.parse('<?= displayRowsJson ?>');
+
+    // Object to store current filter selections for each column
+    const activeFilters = {
+        sourceSlidePageNumber: new Set(),
+        targetPresentationName: new Set(),
+        targetSlidePageNumber: new Set()
+    };
+
+    // Store references to the original dropdown content elements (before they are moved)
+    const dropdownContentCache = {};
+
+    /**
+     * Renders the table body based on the current tableData.
+     */
+    function renderTable() {
+        const tbody = document.getElementById('resultsTableBody');
+        tbody.innerHTML = ''; // Clear existing rows
+
+        tableData.forEach(rowData => {
+            const row = tbody.insertRow();
+            // Source Slide # (with link to source slide if applicable)
+            const sourceSlideCell = row.insertCell();
+            if (rowData.sourceSlideId) { // Check if sourceSlideId exists for linking
+                sourceSlideCell.innerHTML = "<a href=\"https://docs.google.com/presentation/d/" + activePresentationId + "/edit#slide=id." + rowData.sourceSlideId + "\" target=\"_blank\" class=\"text-blue-600 hover:underline\">" + rowData.sourceSlidePageNumber + "</a>";
+            } else {
+                sourceSlideCell.textContent = rowData.sourceSlidePageNumber; // Just display number if no ID
+            }
+
+            // Target Presentation Name (with link)
+            const targetPresCell = row.insertCell();
+            if (rowData.targetPresentationId) {
+                targetPresCell.innerHTML = "<a href=\"https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit\" target=\"_blank\" class=\"text-blue-600 hover:underline\">" + rowData.targetPresentationName + "</a>";
+            } else {
+                targetPresCell.textContent = '';
+            }
+
+            // Target Slide # (with link to target slide if applicable)
+            const targetSlideCell = row.insertCell();
+            if (rowData.targetSlideObjectId) {
+                targetSlideCell.innerHTML = "<a href=\"https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit#slide=id." + rowData.targetSlideObjectId + "\" target=\"_blank\" class=\"text-blue-600 hover:underline\">" + rowData.targetSlidePageNumber + "</a>";
+            } else {
+                targetSlideCell.textContent = '';
+            }
+        });
+    }
+
+    /**
+     * Sorts the table data by a given column.
+     * @param {HTMLElement} header The clicked table header element.
+     * @param {string} columnKey The key in the data object to sort by.
+     */
+    function sortTable(header, columnKey) {
+        // Remove sort arrows from all headers
+        document.querySelectorAll('th').forEach(th => {
+            // Only remove asc/desc classes if it's not the currently clicked header
+            if (th !== header) {
+                th.classList.remove('asc', 'desc');
+            }
+        });
+
+        if (currentSortColumn === columnKey) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortColumn = columnKey;
+            sortDirection = 'asc';
+        }
+
+        // Add new class to the clicked header
+        header.classList.remove('asc', 'desc'); // Clear previous
+        header.classList.add(sortDirection); // Add current
+
+        tableData.sort((a, b) => {
+            const valA = a[columnKey];
+            const valB = b[columnKey];
+
+            // Handle numbers for numeric sorting (e.g., slide numbers)
+            const isNumeric = (typeof valA === 'number' || typeof valA === 'string' && !isNaN(parseFloat(valA))) &&
+                              (typeof valB === 'number' || typeof valB === 'string' && !isNaN(parseFloat(valB)));
+
+            let comparison = 0;
+            if (isNumeric) {
+                comparison = parseFloat(valA) - parseFloat(valB);
+            } else {
+                // Treat empty strings as coming after non-empty strings in ASC order
+                // and before in DESC order for better visual grouping
+                if (valA === '' && valB !== '') comparison = 1;
+                else if (valA !== '' && valB === '') comparison = -1;
+                else if (valA === '' && valB === '') comparison = 0;
+                else {
+                    comparison = String(valA).localeCompare(String(valB));
+                }
+            }
+
+            return sortDirection === 'asc' ? comparison : -comparison;
+        });
+        renderTable();
+    }
+
+    /**
+     * Populates the filter dropdowns with unique values from each column.
+     */
+    function populateFilterDropdowns() {
+        const columnKeys = ['sourceSlidePageNumber', 'targetPresentationName', 'targetSlidePageNumber'];
+        const globalContainer = document.getElementById('global-dropdown-container');
+
+        columnKeys.forEach(key => {
+            // Create the dropdown content div
+            const dropdownContent = document.createElement('div');
+            dropdownContent.id = `filter-${key}`;
+            dropdownContent.classList.add('dropdown-content');
+            // Append it to the global container initially (it will be shown/hidden by JS)
+            globalContainer.appendChild(dropdownContent);
+
+            // Store a reference to this dropdownContent for later use
+            dropdownContentCache[key] = dropdownContent;
+
+            dropdownContent.innerHTML = ''; // Clear previous options
+
+            const uniqueValues = new Set();
+            originalTableData.forEach(row => {
+                uniqueValues.add(row[key]);
+            });
+
+            // Convert Set to Array, sort, and ensure blank is at the top if present
+            let sortedValues = Array.from(uniqueValues).sort((a, b) => {
+                // Custom sort to put (Blank) at the top
+                const valA = (a === null || a === undefined || a === '') ? '' : a;
+                const valB = (b === null || b === undefined || b === '') ? '' : b;
+
+                if (valA === '' && valB !== '') return -1;
+                if (valA !== '' && valB === '') return 1;
+                if (valA === '' && valB === '') return 0;
+
+                // Numeric sort for slide numbers
+                if (key === 'sourceSlidePageNumber' || key === 'targetSlidePageNumber') {
+                    return parseFloat(valA) - parseFloat(valB);
+                }
+                return String(valA).localeCompare(String(valB));
+            });
+            
+            // Add the (De)select All checkbox at the very top
+            const selectAllLabel = document.createElement('label');
+            selectAllLabel.innerHTML = '<input type="checkbox" class="select-all-toggle" data-column="' + key + '"> (De)select All';
+            dropdownContent.appendChild(selectAllLabel);
+            
+            const selectAllCheckbox = selectAllLabel.querySelector('input');
+            selectAllCheckbox.onchange = function(event) {
+                toggleSelectAll(event, key); // Pass column key
+            };
+
+            // Initialize activeFilters for this column: by default, all are selected
+            activeFilters[key].clear(); // Clear existing
+            sortedValues.forEach(value => activeFilters[key].add(String(value)));
+
+
+            sortedValues.forEach(value => {
+                const displayValue = (value === '' || value === null || value === undefined) ? '(Blank)' : value;
+                const checkboxId = "checkbox-" + key + "-" + value; // Unique ID for checkbox
+
+                const label = document.createElement('label');
+                label.innerHTML = "<input type=\"checkbox\" id=\"" + checkboxId + "\" data-column=\"" + key + "\" value=\"" + value + "\" onchange=\"filterTable()\"> " + displayValue;
+                dropdownContent.appendChild(label);
+
+                const checkbox = label.querySelector('input');
+                // All are checked by default on initial population
+                checkbox.checked = true;
+            });
+
+            // Set initial state of "Select All" checkbox to true after all options are populated
+            selectAllCheckbox.checked = true;
+        });
+    }
+
+    /**
+     * Toggles all checkboxes in a specific dropdown based on the "Select/Deselect All" checkbox.
+     * @param {Event} event The change event from the (De)select All checkbox.
+     * @param {string} columnKey The key of the column to toggle.
+     */
+    function toggleSelectAll(event, columnKey) {
+        const masterCheckbox = event.target;
+        const dropdownContent = dropdownContentCache[columnKey]; // Get from cache
+        const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
+
+        if (masterCheckbox.checked) {
+            activeFilters[columnKey].clear(); // Clear existing filters
+            checkboxes.forEach(cb => {
+                cb.checked = true;
+                activeFilters[columnKey].add(cb.value);
+            });
+        } else {
+            activeFilters[columnKey].clear(); // Clear all filters for this column
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+            });
+        }
+        filterTable(); // Re-apply filters
+    }
+
+    /**
+     * Toggles the visibility of a dropdown content.
+     * @param {Event} event The click event.
+     * @param {string} columnKey The key of the column for which to toggle dropdown.
+     */
+    function toggleDropdown(event, columnKey) {
+        event.stopPropagation(); // Prevent sortTable from being called simultaneously
+        const dropdownContent = dropdownContentCache[columnKey]; // Get from cache
+        const dropdownButton = event.currentTarget; // The button that was clicked
+
+        // Close all other dropdowns
+        document.querySelectorAll('.dropdown-content').forEach(content => {
+            if (content.id !== `filter-${columnKey}`) {
+                content.style.display = 'none';
+            }
+        });
+
+        if (dropdownContent.style.display === 'block') {
+            dropdownContent.style.display = 'none';
+        } else {
+            // Calculate position relative to the viewport
+            const rect = dropdownButton.getBoundingClientRect();
+            dropdownContent.style.left = rect.left + 'px';
+            dropdownContent.style.top = (rect.bottom + 5) + 'px'; // 5px buffer below the button
+            dropdownContent.style.display = 'block';
+        }
+    }
+
+    /**
+     * Filters the table data based on selected dropdown values.
+     */
+    function filterTable() {
+        // Update active filters based on current checkbox states
+        const columnKeys = ['sourceSlidePageNumber', 'targetPresentationName', 'targetSlidePageNumber'];
+        columnKeys.forEach(key => {
+            activeFilters[key].clear(); // Clear current selections for this column
+            const dropdownContent = dropdownContentCache[key]; // Get from cache
+            if (dropdownContent) { // Ensure dropdownContent exists before querying
+              dropdownContent.querySelectorAll('input[type="checkbox"]:checked:not(.select-all-toggle)').forEach(checkbox => {
+                  activeFilters[key].add(checkbox.value);
+              });
+              // Update the state of the master "Select All" checkbox
+              const selectAllCheckbox = dropdownContent.querySelector('.select-all-toggle');
+              const allColumnCheckboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
+              if (selectAllCheckbox) {
+                  // If the number of checked boxes (excluding master) matches total, it's "all selected"
+                  selectAllCheckbox.checked = (activeFilters[key].size === allColumnCheckboxes.length);
+              }
+            }
+        });
+
+        // Filter data based on active filters
+        let filteredData = originalTableData.filter(row => {
+            return columnKeys.every(key => {
+                // A row passes the filter for a column if its value is in the activeFilters set for that column.
+                // If activeFilters[key] is empty, it means no items are selected for that filter,
+                // so no rows should be displayed for that column's filter criteria.
+                if (activeFilters[key].size === 0) {
+                    return false; // If nothing is selected in the filter, no row passes this column's filter
+                }
+                return activeFilters[key].has(String(row[key])); // Ensure comparison is string to string
+            });
+        });
+
+        tableData = filteredData; // Update the data being displayed/sorted
+        renderTable(); // Re-render the filtered data
+    }
+
+    // Close dropdowns when clicking outside
+    window.onclick = function(event) {
+        if (!event.target.closest('.dropdown-button') && !event.target.closest('.dropdown-content')) {
+            document.querySelectorAll('.dropdown-content').forEach(content => {
+                content.style.display = 'none';
+            });
+        }
+    };
+
+    // Initial setup
+    document.addEventListener('DOMContentLoaded', (event) => {
+        populateFilterDropdowns(); // Populate dropdowns first
+
+        // Attach event listeners to column headers for sorting
+        document.getElementById('th-sourceSlidePageNumber').addEventListener('click', function(e) {
+            // Prevent sorting if the click was on the dropdown button itself
+            if (!e.target.closest('.dropdown-button')) {
+                sortTable(this, 'sourceSlidePageNumber');
+            }
+        });
+        document.getElementById('th-targetPresentationName').addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown-button')) {
+                sortTable(this, 'targetPresentationName');
+            }
+        });
+        document.getElementById('th-targetSlidePageNumber').addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown-button')) {
+                sortTable(this, 'targetSlidePageNumber');
+            }
+        });
+
+        // Attach event listeners to dropdown buttons for toggling dropdowns
+        document.querySelectorAll('.dropdown-button').forEach(button => {
+            button.addEventListener('click', function(event) {
+                const columnKey = this.dataset.column;
+                toggleDropdown(event, columnKey);
+            });
+        });
+
+        // Initial sort and render when the dialog loads
+        sortTable(document.querySelector('#th-sourceSlidePageNumber'), 'sourceSlidePageNumber'); // Use ID for specific selection
+    });
+  </script>
+</body>
+</html>
