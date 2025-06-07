@@ -8,6 +8,8 @@ Thank you for your interest in contributing to Green Duck Punch, LLC's Linked Sl
 
 The purpose of this contributor agreement ("Agreement") is to clarify and document the rights granted by contributors to Us.
 
+By approving this agreement **you agree that all works of authorship that you provide to Us will be subject to this agreement and are original works for which you own the Copyright and/or Material already made available by Us**. If You are an employee and have created the Contribution as part of your employment, or if You do not own the Copyright in any original works, you might not be legally permitted to approve this agreeement. In that case, contact Us at linkedslides@greenduckpunch.com and await further instructions.
+
 ### How to use this Contributor Agreement
 
 If You are an employee and have created the Contribution as part of your employment, You need to have Your employer approve this Agreement or sign the Entity version of this document. If You do not own the Copyright in the entire work of authorship, any other author of the Contribution should also sign this – in any event, please contact Us at linkedslides@greenduckpunch.com
