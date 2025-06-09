@@ -1,26 +1,5 @@
-<!--
-Linked Slides Add-on - HTML for inputting presentation IDs.
-Copyright (C) 2025 Green Duck Punch, LLC
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as
-published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
-
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-This file is part of the Linked Slides Add-on. The Linked Slides Add-on is
-dual-licensed under the AGPLv3 and a commercial/proprietary license.
-For commercial use or specific licensing terms within Google's proprietary
-environment, please contact Green Duck Punch, LLC.
--->
 <!DOCTYPE html>
+<!-- Copyright (c) 2025 Green Duck Punch, LLC. All rights reserved. -->
 <html>
 <head>
   <base target="_top">
@@ -32,216 +11,188 @@ environment, please contact Green Duck Punch, LLC.
       background-color: #f7fafc;
       color: #2d3748;
       padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh; /* Ensure it takes full viewport height */
     }
     .container {
-      max-width: 800px;
+      max-width: 90%;
       margin: auto;
+      text-align: center; /* Center content within the container */
     }
-    .input-group label {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      display: block;
-      color: #4a5568;
+    /* Simple styling for the message area */
+    .message-info {
+      background-color: #e0f2fe; /* light blue */
+      border: 1px solid #90cdf4; /* blue border */
+      color: #2b6cb0; /* dark blue text */
     }
-    .input-group textarea {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #cbd5e0;
-      border-radius: 0.375rem;
-      font-size: 1rem;
-      color: #2d3748;
-      background-color: #ffffff;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
-      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-    .input-group textarea:focus {
-      border-color: #63b3ed; /* Tailwind blue-400 */
-      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); /* Tailwind blue-300 with opacity */
-      outline: none;
-    }
-    .button-group {
-      display: flex;
-      justify-content: flex-end;
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-    .btn {
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.375rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, transform 0.1s ease-in-out;
-    }
-    .btn-primary {
-      background-color: #4299e1; /* Tailwind blue-500 */
-      color: white;
-      border: 1px solid #4299e1;
-    }
-    .btn-primary:hover {
-      background-color: #3182ce; /* Tailwind blue-600 */
-      transform: translateY(-1px);
-    }
-    .btn-secondary {
-      background-color: #e2e8f0; /* Tailwind gray-200 */
-      color: #2d3748;
-      border: 1px solid #e2e8f0;
-    }
-    .btn-secondary:hover {
-      background-color: #cbd5e0; /* Tailwind gray-300 */
-      transform: translateY(-1px);
-    }
-    .btn:active {
-      transform: translateY(0);
-      box-shadow: none;
-    }
-    .picker-container {
-      margin-top: 1rem;
-      border: 1px solid #cbd5e0;
-      border-radius: 0.375rem;
-      height: 300px; /* Fixed height for Picker iframe */
-      overflow: hidden; /* Hide scrollbars if Picker content overflows */
-    }
-    .picker-message {
-      margin-top: 1rem;
-      font-size: 0.875rem;
-      color: #718096;
+    .message-error {
+      background-color: #fee2e2; /* light red */
+      border: 1px solid #fc8181; /* red border */
+      color: #c53030; /* dark red text */
     }
   </style>
 </head>
 <body class="p-4">
+  <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
+
   <div class="container bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-2xl font-bold mb-4 text-gray-800">Search for Linked Slides</h2>
+    <h1 class="text-2xl font-bold mb-4 text-gray-800">Find Linked Slides</h1>
+    <p class="mb-4 text-gray-700">Please wait while the file selection dialog loads...</p>
 
-    <p class="mb-4 text-gray-700">
-      Enter the IDs of other Google Slides presentations you want to search for linked slides.
-      Separate multiple IDs with commas.
-    </p>
+    <div id="message" class="hidden p-3 mb-4 rounded-md text-sm" role="alert"></div>
 
-    <div class="input-group mb-4">
-      <label for="presentationIds">Presentation IDs (comma-separated):</label>
-      <textarea id="presentationIds" rows="4" placeholder="e.g., 123abcXYZ..., 456defUVW..."></textarea>
-    </div>
-
-    <p class="text-gray-700 mb-2">
-      Or, select presentations directly from Google Drive:
-    </p>
-    <button id="pickFileButton" class="btn btn-primary mb-4">Select from Google Drive</button>
-
-    <div id="pickerDiv" class="picker-container"></div>
-    <p class="picker-message">
-        Note: The Google Drive file picker might require a pop-up window for authentication.
-        Please enable pop-ups for this site if it doesn't appear.
-    </p>
-
-    <div class="button-group">
-      <button class="btn btn-secondary" onclick="google.script.host.close()">Cancel</button>
-      <button class="btn btn-primary" onclick="searchSlides()">Search</button>
-    </div>
+    <div id="loadingIndicator" class="flex justify-center space-x-3 mt-6">
+      </div>
   </div>
 
-  <script src="https://apis.google.com/js/api.js"></script>
-  <script>
-    // OAuth token passed from server-side (Code.gs)
+  <script type="text/javascript">
+    // Access the OAuth token passed from the Apps Script server-side
     const OAUTH_TOKEN = '<?= oauthToken ?>';
-    let pickerApiLoaded = false;
-    let authInitialized = false;
 
-    // Load the Google API client library and the Picker API
-    function loadApi() {
-      gapi.load('client:picker', () => {
-        pickerApiLoaded = true;
-        checkAndInitializePicker();
-      });
-    }
-
-    // Initialize the Google API client with the OAuth token
-    function initializeAuth() {
-      gapi.client.setToken({
-        access_token: OAUTH_TOKEN
-      });
-      authInitialized = true;
-      checkAndInitializePicker();
-    }
-
-    // Function to check if both API and Auth are loaded before initializing picker
-    function checkAndInitializePicker() {
-      if (pickerApiLoaded && authInitialized) {
-        document.getElementById('pickFileButton').addEventListener('click', createPicker);
-      }
+    /**
+     * Displays a message in the dialog.
+     * @param {string} msg The message to display.
+     * @param {string} type The type of message ('info' or 'error').
+     */
+    function showMessage(msg, type = 'info') {
+      const messageDiv = document.getElementById('message');
+      messageDiv.textContent = msg;
+      messageDiv.className = `p-3 mb-4 rounded-md text-sm message-${type}`;
+      messageDiv.classList.remove('hidden');
     }
 
     /**
-     * Create and show the Google Drive Picker.
+     * Hides the message area.
+     */
+    function hideMessage() {
+      const messageDiv = document.getElementById('message');
+      messageDiv.classList.add('hidden');
+    }
+
+    /**
+     * Callback function for when the Google API client library (gapi.client) is loaded.
+     * This function is called by gapi.load('client', onClientLoad).
+     */
+    function onClientLoad() {
+      gapi.client.init({
+        // No explicit API key needed when using OAuth token directly for Picker
+      }).then(function() {
+        // Set the OAuth token for gapi.client
+        gapi.auth.setToken({
+          access_token: OAUTH_TOKEN
+        });
+        // Now that gapi.client is initialized and authenticated, load the Picker API
+        gapi.load('picker', { callback: onPickerLoaded });
+      }, function(error) {
+        console.error("Error initializing gapi client:", error);
+        showMessage("Error initializing Google APIs. Please check your browser console for details.", 'error');
+      });
+    }
+
+    /**
+     * Callback function for when the Google Picker API is loaded.
+     * Automatically creates and displays the picker.
+     */
+    function onPickerLoaded() {
+      hideMessage(); // Hide any initial loading message
+      createPicker(); // Automatically open the picker
+    }
+
+    /**
+     * Creates and displays the Google Picker dialog.
      */
     function createPicker() {
-      const view = new google.picker.View(google.picker.ViewId.PRESENTATIONS);
-      view.setMimeTypes('application/vnd.google-apps.presentation'); // Filter for Google Slides files
+      if (!gapi.auth.getToken() || !gapi.auth.getToken().access_token) {
+        showMessage('Authentication token is missing. Please refresh the page and try again.', 'error');
+        return;
+      }
 
+      // Define the MIME types for Google Slides presentations and folders.
+      const presentationMimeType = 'application/vnd.google-apps.presentation';
+      const folderMimeType = 'application/vnd.google-apps.folder';
+      // Mime types to display in the views (presentations and folders)
+      const visibleMimeTypes = `${presentationMimeType},${folderMimeType}`;
+
+      // Create a Docs view for My Drive, showing presentations and folders (default behavior)
+      const myDriveView = new google.picker.DocsView(google.picker.ViewId.DOCS)
+          .setIncludeFolders(true)
+          .setMode(google.picker.DocsViewMode.LIST)
+          .setParent('root')
+          .setMimeTypes(visibleMimeTypes); // Filter what is displayed
+
+      // Create another Docs view specifically for Shared Drives, showing presentations and folders
+      const sharedDrivesView = new google.picker.DocsView(google.picker.ViewId.DOCS)
+          .setIncludeFolders(true)
+          .setMode(google.picker.DocsViewMode.LIST)
+          .setMimeTypes(visibleMimeTypes) // Filter what is displayed
+          .setEnableDrives(true); // Enable Shared Drives for this specific view
+
+      // Build the picker
       const picker = new google.picker.PickerBuilder()
-          .addView(view)
-          .setOAuthToken(OAUTH_TOKEN)
-          .setDeveloperKey('YOUR_API_KEY') // Not strictly needed for user-authenticated Picker
-          .setCallback(pickerCallback)
+          .addView(myDriveView) // Add My Drive browsing
+          .addView(sharedDrivesView) // Add Shared Drives browsing
+          .enableFeature(google.picker.Feature.MULTISELECT_ENABLED) // Correct method for multi-selection
+          // setSelectableMimeTypes ensures only presentations can be selected, even if folders are visible
+          .setSelectableMimeTypes(presentationMimeType)
+          .setOAuthToken(gapi.auth.getToken().access_token) // Set the OAuth token for authentication
+          .setCallback(pickerCallback) // Set the callback function for when selections are made
+          .setOrigin(google.script.host.origin) // CRUCIAL FIX: Use google.script.host.origin
           .build();
-      picker.setVisible(true);
+
+      picker.setVisible(true); // Display the picker dialog
     }
 
     /**
-     * Callback function for the Google Drive Picker.
-     * @param {Object} data The data returned from the Picker.
+     * Callback function executed when the user interacts with the Picker dialog.
+     * @param {object} data The data returned by the Picker.
      */
     function pickerCallback(data) {
-      if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
-        const doc = data[google.picker.Response.DOCUMENTS][0];
-        const presentationId = doc.id;
-        const textarea = document.getElementById('presentationIds');
-        if (textarea.value) {
-          textarea.value += ', ' + presentationId;
-        } else {
-          textarea.value = presentationId;
+      if (data.action === google.picker.Action.PICKED) {
+        const docs = data.docs;
+        const presentationIds = docs.map(doc => doc.id).join(', ');
+
+        if (presentationIds.trim().length === 0) {
+          showMessage('No presentations selected. Please select at least one.', 'error');
+          // If no presentations are selected but the action was PICKED,
+          // it means the user closed the picker without selecting anything.
+          // We should close the main dialog as well.
+          google.script.host.close();
+          return;
         }
+
+        // Show a loading indicator
+        document.body.style.cursor = 'wait';
+        showMessage('Searching for linked slides...', 'info');
+
+        // Call the server-side function directly with the selected IDs
+        google.script.run
+          .withSuccessHandler(function() {
+            google.script.host.close(); // Close the input dialog after successful search
+          })
+          .withFailureHandler(function(error) {
+            // Display error message in the dialog
+            showMessage('Error: ' + error.message, 'error');
+            console.error("Server-side error:", error);
+            document.body.style.cursor = 'default';
+            // Since there's no button to re-enable, we just keep the error message
+            // and the user can close the dialog manually.
+          })
+          ._performLinkedSlideSearch(presentationIds);
+
+      } else if (data.action === google.picker.Action.CANCEL) {
+        google.script.host.close(); // Close the dialog if picker is cancelled
       }
     }
 
-    /**
-     * Sends the entered presentation IDs to the server-side Apps Script function.
-     */
-    function searchSlides() {
-      const presentationIds = document.getElementById('presentationIds').value;
-      // Show a temporary loading message if needed, or disable the button
-      document.getElementById('searchButton').disabled = true;
-      google.script.run
-        .withSuccessHandler(google.script.host.close) // Close on success
-        .withFailureHandler(showError) // Handle errors
-        ._performLinkedSlideSearch(presentationIds);
-    }
+    // Load the client library first. Once loaded, it will call onClientLoad,
+    // which in turn loads the picker library.
+    gapi.load('client', onClientLoad);
 
-    /**
-     * Displays an error message to the user.
-     * @param {Error} error The error object.
-     */
-    function showError(error) {
-      // Re-enable the search button
-      document.getElementById('searchButton').disabled = false;
-      // Using a simple alert for now, but a custom modal dialog would be better.
-      alert('Error: ' + error.message);
-      console.error('Apps Script Error:', error);
-    }
-
-    // Event listener for when the DOM is fully loaded
-    document.addEventListener('DOMContentLoaded', () => {
-        // Find the "Search" button and assign the correct ID
-        const searchButton = document.querySelector('.btn-primary:last-child');
-        if (searchButton) {
-            searchButton.id = 'searchButton';
-            searchButton.onclick = searchSlides; // Assign the click handler
-        }
-
-        // Load the Google API client library
-        loadApi();
-        // Initialize auth with the OAuth token
-        initializeAuth();
-    });
+    // Initial message while APIs are loading
+    showMessage('Loading Google APIs...', 'info');
   </script>
 </body>
 </html>
