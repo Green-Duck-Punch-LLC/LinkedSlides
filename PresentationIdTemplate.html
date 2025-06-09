@@ -1,0 +1,247 @@
+<!--
+Linked Slides Add-on - HTML for inputting presentation IDs.
+Copyright (C) 2025 Green Duck Punch, LLC
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file is part of the Linked Slides Add-on. The Linked Slides Add-on is
+dual-licensed under the AGPLv3 and a commercial/proprietary license.
+For commercial use or specific licensing terms within Google's proprietary
+environment, please contact Green Duck Punch, LLC.
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f7fafc;
+      color: #2d3748;
+      padding: 1rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+    }
+    .input-group label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: block;
+      color: #4a5568;
+    }
+    .input-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      color: #2d3748;
+      background-color: #ffffff;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .input-group textarea:focus {
+      border-color: #63b3ed; /* Tailwind blue-400 */
+      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5); /* Tailwind blue-300 with opacity */
+      outline: none;
+    }
+    .button-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    }
+    .btn-primary {
+      background-color: #4299e1; /* Tailwind blue-500 */
+      color: white;
+      border: 1px solid #4299e1;
+    }
+    .btn-primary:hover {
+      background-color: #3182ce; /* Tailwind blue-600 */
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background-color: #e2e8f0; /* Tailwind gray-200 */
+      color: #2d3748;
+      border: 1px solid #e2e8f0;
+    }
+    .btn-secondary:hover {
+      background-color: #cbd5e0; /* Tailwind gray-300 */
+      transform: translateY(-1px);
+    }
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+    .picker-container {
+      margin-top: 1rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 0.375rem;
+      height: 300px; /* Fixed height for Picker iframe */
+      overflow: hidden; /* Hide scrollbars if Picker content overflows */
+    }
+    .picker-message {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: #718096;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-2xl font-bold mb-4 text-gray-800">Search for Linked Slides</h2>
+
+    <p class="mb-4 text-gray-700">
+      Enter the IDs of other Google Slides presentations you want to search for linked slides.
+      Separate multiple IDs with commas.
+    </p>
+
+    <div class="input-group mb-4">
+      <label for="presentationIds">Presentation IDs (comma-separated):</label>
+      <textarea id="presentationIds" rows="4" placeholder="e.g., 123abcXYZ..., 456defUVW..."></textarea>
+    </div>
+
+    <p class="text-gray-700 mb-2">
+      Or, select presentations directly from Google Drive:
+    </p>
+    <button id="pickFileButton" class="btn btn-primary mb-4">Select from Google Drive</button>
+
+    <div id="pickerDiv" class="picker-container"></div>
+    <p class="picker-message">
+        Note: The Google Drive file picker might require a pop-up window for authentication.
+        Please enable pop-ups for this site if it doesn't appear.
+    </p>
+
+    <div class="button-group">
+      <button class="btn btn-secondary" onclick="google.script.host.close()">Cancel</button>
+      <button class="btn btn-primary" onclick="searchSlides()">Search</button>
+    </div>
+  </div>
+
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script>
+    // OAuth token passed from server-side (Code.gs)
+    const OAUTH_TOKEN = '<?= oauthToken ?>';
+    let pickerApiLoaded = false;
+    let authInitialized = false;
+
+    // Load the Google API client library and the Picker API
+    function loadApi() {
+      gapi.load('client:picker', () => {
+        pickerApiLoaded = true;
+        checkAndInitializePicker();
+      });
+    }
+
+    // Initialize the Google API client with the OAuth token
+    function initializeAuth() {
+      gapi.client.setToken({
+        access_token: OAUTH_TOKEN
+      });
+      authInitialized = true;
+      checkAndInitializePicker();
+    }
+
+    // Function to check if both API and Auth are loaded before initializing picker
+    function checkAndInitializePicker() {
+      if (pickerApiLoaded && authInitialized) {
+        document.getElementById('pickFileButton').addEventListener('click', createPicker);
+      }
+    }
+
+    /**
+     * Create and show the Google Drive Picker.
+     */
+    function createPicker() {
+      const view = new google.picker.View(google.picker.ViewId.PRESENTATIONS);
+      view.setMimeTypes('application/vnd.google-apps.presentation'); // Filter for Google Slides files
+
+      const picker = new google.picker.PickerBuilder()
+          .addView(view)
+          .setOAuthToken(OAUTH_TOKEN)
+          .setDeveloperKey('YOUR_API_KEY') // Not strictly needed for user-authenticated Picker
+          .setCallback(pickerCallback)
+          .build();
+      picker.setVisible(true);
+    }
+
+    /**
+     * Callback function for the Google Drive Picker.
+     * @param {Object} data The data returned from the Picker.
+     */
+    function pickerCallback(data) {
+      if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
+        const doc = data[google.picker.Response.DOCUMENTS][0];
+        const presentationId = doc.id;
+        const textarea = document.getElementById('presentationIds');
+        if (textarea.value) {
+          textarea.value += ', ' + presentationId;
+        } else {
+          textarea.value = presentationId;
+        }
+      }
+    }
+
+    /**
+     * Sends the entered presentation IDs to the server-side Apps Script function.
+     */
+    function searchSlides() {
+      const presentationIds = document.getElementById('presentationIds').value;
+      // Show a temporary loading message if needed, or disable the button
+      document.getElementById('searchButton').disabled = true;
+      google.script.run
+        .withSuccessHandler(google.script.host.close) // Close on success
+        .withFailureHandler(showError) // Handle errors
+        ._performLinkedSlideSearch(presentationIds);
+    }
+
+    /**
+     * Displays an error message to the user.
+     * @param {Error} error The error object.
+     */
+    function showError(error) {
+      // Re-enable the search button
+      document.getElementById('searchButton').disabled = false;
+      // Using a simple alert for now, but a custom modal dialog would be better.
+      alert('Error: ' + error.message);
+      console.error('Apps Script Error:', error);
+    }
+
+    // Event listener for when the DOM is fully loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        // Find the "Search" button and assign the correct ID
+        const searchButton = document.querySelector('.btn-primary:last-child');
+        if (searchButton) {
+            searchButton.id = 'searchButton';
+            searchButton.onclick = searchSlides; // Assign the click handler
+        }
+
+        // Load the Google API client library
+        loadApi();
+        // Initialize auth with the OAuth token
+        initializeAuth();
+    });
+  </script>
+</body>
+</html>
