@@ -83,11 +83,12 @@ The code in this repository is set up for a Google Workspace Add-on deployment. 
 .
 ├── .github/
 │   └── workflows/
-│       └── trigger-private-deploy.yml # Triggers deployment in private repo (proprietary)
-├── appsscript.json     # Apps Script manifest file (configured for Add-on, AGPLv3)
-├── Code.gs             # Google Apps Script server-side code (configured for Add-on, AGPLv3)
-├── LinkedSlidesResults.html # HTML for the dialog/UI (client-side, AGPLv3)
-├── CLA.md              # Contributor License Agreement document (AGPLv3)
+│       └── trigger-private-deploy.yml # Triggers deployment in private repo
+├── appsscript.json     # Apps Script manifest file (configured for Add-on)
+├── Code.gs             # Google Apps Script server-side code (configured for Add-on)
+├── PresentationIdTemplate.html # HTML for the initial dialog/UI (client-side)
+├── LinkedSlidesResults.html # HTML for the search results (client-side)
+├── CLA.md              # Contributor License Agreement document
 └── COPYING             # Full text of the AGPLv3 license
 ```
 
