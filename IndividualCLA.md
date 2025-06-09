@@ -95,3 +95,6 @@ IF THE DISCLAIMER AND DAMAGE WAIVER MENTIONED IN SECTION 4. AND SECTION 5. CANNO
 8.4 If any provision of this Agreement is found void and unenforceable, such provision will be replaced to the extent possible with a provision that comes closest to the meaning of the original provision and that is enforceable. The terms and conditions set forth in this Agreement shall apply notwithstanding any failure of essential purpose of this Agreement or any limited remedy to the maximum extent possible under law.
 
 8.5 You agree to notify Us of any facts or circumstances of which you become aware that would make this Agreement inaccurate in any respect.
+
+_This agreement is a modified version of an Individual Contributor License Agreement created at [https://contributoragreements.org/](https://contributoragreements.org/) and the agreement itself is licensed under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)._
+
