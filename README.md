@@ -93,26 +93,20 @@ The code in this repository is set up for a Google Workspace Add-on deployment. 
 
 ## Contributing
 
-We welcome contributions to the Linked Slides Add-on! To ensure a smooth collaboration and proper licensing, all contributors must agree to the terms of a Contributor License Agreement (CLA).
+We welcome contributions to the Linked Slides Add-on! To ensure a smooth collaboration and proper licensing, all contributors must agree to the terms of our [Contributor License Agreement (CLA)](CLA.md).
 
 ### Contributor License Agreement (CLA)
 
 Before your first pull request can be merged, you will need to sign our CLA. This agreement ensures that Green Duck Punch, LLC has the necessary rights to use your contributions in all versions of the add-on, including future commercial releases.
 
-* **How to Sign:** We recommend using a CLA bot for automated management. For example, you can integrate the [CLA Assistant GitHub App](https://github.com/apps/cla-assistant) with your repository.
-    * **Setup CLA Assistant:**
-        1.  Install the [CLA Assistant GitHub App](https://github.com/apps/cla-assistant) on your repository.
-        2.  Configure it with a link to your CLA document (e.g., a Google Doc or a Markdown file in your repo like `CLA.md`).
-        3.  Set it to comment on pull requests, guiding contributors to sign if they haven't already.
-    * **CLA Document:** Create a clear Contributor License Agreement document that explicitly states the assignment of rights to Green Duck Punch, LLC. You can link to this document from the CLA Assistant configuration.
+* **How to Sign:** When you submit your first pull request, it will receive a comment from the CLA bot telling you how to sign the CLA.
 
 ### Contribution Process
 
 1.  **Fork the repository.**
 2.  **Create a new branch** for your feature or bug fix.
 3.  **Make your changes** and test them thoroughly.
-4.  **Ensure you have signed the CLA.** The CLA bot will automatically check this when you open a pull request.
-5.  **Submit a Pull Request** to the `master` branch.
+4.  **Submit a Pull Request** to the `master` branch. When you submit your first pull request, the CLA bot will make a comment telling you how to sign the CLA.
 
 ## License
 
@@ -121,4 +115,4 @@ The Google Slides Linked Slides Add-on is dual-licensed:
 1.  **[GNU Affero General Public License Version 3 (AGPLv3)](https://www.gnu.org/licenses/agpl-3.0.html):** If you use the add-on or any derivative of its source code (including a container-bound script) under the AGPLv3, you must provide users with access to the corresponding source code under the terms of the AGPLv3.
 2.  **Commercial/Proprietary License:** A standard commercial/proprietary license is available for those who would prefer not to be subject to the restrictions of the AGPL. Details of this license are available upon request from Green Duck Punch, LLC.
  
-By contributing to this project, you agree to assign all rights to your contributions to Green Duck Punch, LLC, allowing them to be included in all licensing models, including future commercial releases.
+By contributing to this project, you agree to our [Contributor License Agreement](CLA.md) which allows Green Duck Punch, LLC to use your contributions under all licensing models, including future commercial releases. See the agreement for complete details.
