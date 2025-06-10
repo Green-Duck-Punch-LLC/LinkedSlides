@@ -51,14 +51,21 @@ The code in this repository is set up for a Google Workspace Add-on deployment. 
         This creates a standard custom menu in your presentation's menu bar instead of an add-on menu.
     * Save the file (File > Save project).
 
-4.  **Create `LinkedSlidesResults.html` File:**
+4.  **Create `PresentationIdInput.html` File:**
+    * In the Apps Script editor, click the `+` icon next to "Files" in the left sidebar.
+    * Select `HTML`.
+    * Name the new file `PresentationIdInput.html`.
+    * Copy the entire content from the `PresentationIdInput.html` file in *this GitHub repository* and paste it into this new `PresentationIdInput.html` file in the Apps Script editor.
+    * Save the file.
+
+5.  **Create `LinkedSlidesResults.html` File:**
     * In the Apps Script editor, click the `+` icon next to "Files" in the left sidebar.
     * Select `HTML`.
     * Name the new file `LinkedSlidesResults.html`.
     * Copy the entire content from the `LinkedSlidesResults.html` file in *this GitHub repository* and paste it into this new `LinkedSlidesResults.html` file in the Apps Script editor.
     * Save the file.
 
-5.  **Copy `appsscript.json` Manifest Content:**
+6.  **Copy `appsscript.json` Manifest Content:**
     * In the Apps Script editor, click the **Project Settings** (gear icon) in the left sidebar.
     * Scroll down to the "Manifest file" section and click the "Edit manifest" button or directly select `appsscript.json` if visible.
     * Delete all the existing content in `appsscript.json`.
@@ -66,12 +73,12 @@ The code in this repository is set up for a Google Workspace Add-on deployment. 
     * **IMPORTANT ADAPTATION FOR CONTAINER-BOUND SCRIPT:** If you are using this as a container-bound script, you should **remove** the entire `addOns` section from `appsscript.json`. This section is specific to Google Workspace Add-ons.
     * Save the file.
 
-6.  **Refresh Google Slides:**
+7.  **Refresh Google Slides:**
     * Close the Apps Script editor.
     * Refresh your Google Slides presentation page in your browser.
     * You should now see the custom menu based on your `onOpen()` configuration.
 
-7.  **Authorize Script (First Run):**
+8.  **Authorize Script (First Run):**
     * The very first time you run the script, Google will ask you to authorize it.
     * Click on the menu item: `Extensions` > `Linked Slides Add-on` > `Find linked slides` (or your custom menu if container-bound).
     * Follow the on-screen prompts to grant the necessary permissions. This is a standard security measure for Apps Script.
@@ -83,7 +90,7 @@ The code in this repository is set up for a Google Workspace Add-on deployment. 
 .
 ├── .github/
 │   └── workflows/
-│       └── trigger-private-deploy.yml # Triggers deployment in private repo
+│       └── trigger-private-deploy.yml # Triggers add-on deployment in private repo
 ├── appsscript.json     # Apps Script manifest file (configured for Add-on)
 ├── Code.gs             # Google Apps Script server-side code (configured for Add-on)
 ├── PresentationIdInput.html # HTML for the initial dialog/UI (client-side)
