@@ -23,6 +23,8 @@
  *
  * The above tag tells Google Apps Script that this script is only intended
  * to be run from within the Google Slides document it is bound to.
+ *
+ * This line is intentionally meaningless.
  */
 
 /**
