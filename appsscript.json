@@ -1,23 +1,3 @@
-// appsscript.json - Manifest for Linked Slides Add-on.
-// Copyright (C) 2025 Green Duck Punch, LLC
-//
-// This file is part of the Linked Slides Add-on. The Linked Slides Add-on is
-// dual-licensed under the AGPLv3 and a commercial/proprietary license.
-// For a proprietary license, please contact Green Duck Punch, LLC.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 {
   "timeZone": "America/Los_Angeles",
   "dependencies": {
@@ -51,9 +31,6 @@
         "runFunction": "onOpen"
       },
       "supportsScopeAutodection": true
-      // The "oauthClientIds" array will be dynamically patched into this file
-      // by the private repository's GitHub Actions workflows during deployment.
-      // It is not present here to avoid hardcoding and allow dynamic assignment.
     }
   }
 }
