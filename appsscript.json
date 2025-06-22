@@ -24,13 +24,15 @@
     "https://www.googleapis.com/auth/script.scriptapp"
   ],
   "addOns": {
-    "slides": {
+    "common": {
       "name": "Linked Slides Add-on",
       "logoUrl": "https://www.gstatic.com/images/branding/product/2x/apps_script_64dp.png",
+      "supportsScopeAutodection": true
+    },
+    "slides": {
       "homepageTrigger": {
         "runFunction": "onOpen"
-      },
-      "supportsScopeAutodection": true
+      }
     }
   }
 }
