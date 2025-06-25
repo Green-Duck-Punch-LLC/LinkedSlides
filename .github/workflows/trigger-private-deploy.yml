@@ -19,7 +19,7 @@ jobs:
         with:
           token: ${{ secrets.PRIVATE_REPO_DISPATCH_TOKEN }} # PAT with workflow_dispatch scope on private repo
           repository: 'Green-Duck-Punch-LLC/private-linked-slides-addon-deploy' # Replace with your private repo path (e.g., your_org/your_private_repo_name)
-          event: 'deploy-from-public-repo'
+          event-type: 'deploy-from-public-repo'
           client-payload: '{"public_repo_owner": "${{ github.repository_owner }}", "public_repo_name": "${{ github.event.repository.name }}"}'
 
       - name: Echo Dispatch Status
