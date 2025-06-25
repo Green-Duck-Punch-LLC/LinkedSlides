@@ -8,7 +8,7 @@ name: Trigger Private Repo Deployment
 on:
   push:
     branches:
-      - master # Triggers when changes are pushed to the master branch
+      - main # Triggers when changes are pushed to the main branch
 
 jobs:
   dispatch_deployment:
