@@ -2,7 +2,7 @@
 
 This repository contains the source code for the "Linked Slides Add-on," a Google Apps Script project. This add-on helps users identify linked slides within a Google Slides presentation and across other specified presentations in their Google Drive.
 
-**The primary configuration of this source code is for deployment as a Google Workspace Add-on.** However, instructions are provided below for how to adapt it for manual use as a container-bound Apps Script within a single Google Slides presentation.
+**The primary configuration of this source code is for deployment as a Google Workspace Editor Add-on.** However, instructions are provided below for how to adapt it for manual use as a container-bound Apps Script within a single Google Slides presentation.
 
 ## Table of Contents
 
@@ -28,7 +28,7 @@ To use this code manually (either as an add-on or adapted to a container-bound s
 
 ## Manual Setup and Adaptation for Container-Bound Script
 
-The code in this repository is set up for a Google Workspace Add-on deployment. Follow these steps if you wish to use it manually as a container-bound script within a single Google Slides presentation.
+The code in this repository is set up for a Google Workspace Editor Add-on deployment. Follow these steps if you wish to use it manually as a container-bound script within a single Google Slides presentation.
 
 1.  **Open Google Slides Presentation:** Go to [Google Slides](https://docs.google.com/presentation/u/0/) and open the presentation where you want to add this script. If you don't have one, create a new blank presentation.
 
@@ -90,7 +90,6 @@ The code in this repository is set up for a Google Workspace Add-on deployment. 
 .
 ├── .github/
 │   └── workflows/
-│       └── trigger-private-deploy.yml # Triggers add-on deployment in private repo
 ├── appsscript.json     # Apps Script manifest file (configured for Add-on)
 ├── Code.gs             # Google Apps Script server-side code (configured for Add-on)
 ├── PresentationIdInput.html # HTML for the initial dialog/UI (client-side)
