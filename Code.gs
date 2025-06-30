@@ -230,3 +230,36 @@ function _performLinkedSlideSearch(presentationIdsString) {
 
   ui.showModalDialog(resultHtmlOutput, 'Linked Slides Search Results');
 }
+
+/**
+ * Gets the parent folder name for a given set of file IDs.
+ * @param {string} fileIds A comma-separated string of file IDs.
+ * @return {Object} A map of fileId -> parentName.
+ */
+function _getFileParents(fileIds) {
+  if (!fileIds || fileIds.length === 0) {
+    return {};
+  }
+  const parentInfo = {};
+  const ids = fileIds.split(',');
+  ids.forEach(id => {
+    try {
+      // Note: This requires the Drive API v2 Advanced Service.
+      const file = Drive.Files.get(id, { fields: 'parents', supportsAllDrives: true });
+      if (file.parents && file.parents.length > 0) {
+        // A file can have multiple parents; we'll use the first one.
+        const parentId = file.parents[0].id;
+        const parentFolder = Drive.Files.get(parentId, { fields: 'title', supportsAllDrives: true }); // 'title' is the field for name in v2
+        parentInfo[id] = parentFolder.title;
+      } else {
+        // File is in the root of My Drive.
+        parentInfo[id] = 'My Drive';
+      }
+    } catch (e) {
+      // If file not found or other error, default gracefully.
+      console.error(`Could not get parent for file ID ${id}: ${e.toString()}`);
+      parentInfo[id] = 'Unknown';
+    }
+  });
+  return parentInfo;
+}

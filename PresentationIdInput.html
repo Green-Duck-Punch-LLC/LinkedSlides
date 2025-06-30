@@ -40,17 +40,39 @@
 
   <div class="container bg-white rounded-lg shadow-md p-6">
     <h1 class="text-2xl font-bold mb-4 text-gray-800">Find Linked Slides</h1>
-    <p class="mb-4 text-gray-700">Please wait while the file selection dialog loads...</p>
+
+    <div id="initial-view">
+      <p class="mb-4 text-gray-700">Please wait while the file selection dialog loads...</p>
+    </div>
 
     <div id="message" class="hidden p-3 mb-4 rounded-md text-sm" role="alert"></div>
 
-    <div id="loadingIndicator" class="flex justify-center space-x-3 mt-6">
+    <div id="selection-view" class="hidden w-full">
+      <h2 class="text-xl font-semibold mb-2 text-gray-800">Files to search</h2>
+      <div class="overflow-x-auto border rounded-lg mb-4">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Containing Folder</th>
+            </tr>
+          </thead>
+          <tbody id="files-table-body" class="bg-white divide-y divide-gray-200">
+            <!-- Rows will be added here by JavaScript -->
+          </tbody>
+        </table>
       </div>
+      <div class="flex justify-end space-x-4">
+        <button id="add-files-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add Files</button>
+        <button id="start-search-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" disabled>Start Search</button>
+      </div>
+    </div>
   </div>
 
   <script type="text/javascript">
     // Access the OAuth token passed from the Apps Script server-side
     const OAUTH_TOKEN = '<?= oauthToken ?>';
+    let selectedFiles = new Map();
 
     /**
      * Displays a message in the dialog.
@@ -98,7 +120,8 @@
      */
     function onPickerLoaded() {
       hideMessage(); // Hide any initial loading message
-      createPicker(); // Automatically open the picker
+      // Automatically open the picker for the initial selection.
+      createPicker();
     }
 
     /**
@@ -146,53 +169,144 @@
     }
 
     /**
+     * Renders the table of selected files and updates UI visibility.
+     */
+    function renderSelectedFilesTable() {
+      const tableBody = document.getElementById('files-table-body');
+      tableBody.innerHTML = ''; // Clear existing rows
+
+      if (selectedFiles.size === 0) {
+        document.getElementById('selection-view').classList.add('hidden');
+        document.getElementById('initial-view').classList.remove('hidden');
+        document.getElementById('start-search-btn').disabled = true;
+        return;
+      }
+
+      document.getElementById('initial-view').classList.add('hidden');
+      document.getElementById('selection-view').classList.remove('hidden');
+
+      selectedFiles.forEach(file => {
+        const row = tableBody.insertRow();
+        row.className = 'hover:bg-gray-100';
+
+        const nameCell = row.insertCell();
+        nameCell.textContent = file.name;
+        nameCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+
+        const folderCell = row.insertCell();
+        // A file can have multiple parents. We'll display the first one.
+        // The parentName is now attached directly to the file object. Default if missing.
+        folderCell.textContent = file.parentName || 'My Drive';
+        folderCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+      });
+
+      document.getElementById('start-search-btn').disabled = false;
+    }
+
+    /**
      * Callback function executed when the user interacts with the Picker dialog.
      * @param {object} data The data returned by the Picker.
      */
     function pickerCallback(data) {
       if (data.action === google.picker.Action.PICKED) {
         const docs = data.docs;
-        const presentationIds = docs.map(doc => doc.id).join(', ');
-
-        if (presentationIds.trim().length === 0) {
-          showMessage('No presentations selected. Please select at least one.', 'error');
-          // If no presentations are selected but the action was PICKED,
-          // it means the user closed the picker without selecting anything.
-          // We should close the main dialog as well.
-          google.script.host.close();
-          return;
+        if (docs.length === 0) {
+          // If the initial picker is closed without selection, close the dialog.
+          if (selectedFiles.size === 0) {
+              google.script.host.close();
+          }
+          return; // Otherwise, just do nothing if no new files were picked.
         }
 
-        // Show a loading indicator
-        document.body.style.cursor = 'wait';
-        showMessage('Searching for linked slides...', 'info');
+        // Filter out files that are already in our list to avoid reprocessing
+        const newDocs = docs.filter(doc => !selectedFiles.has(doc.id));
+        if (newDocs.length === 0) return; // No new unique files were selected
 
-        // Call the server-side function directly with the selected IDs
-        google.script.run
-          .withSuccessHandler(function() {
-            google.script.host.close(); // Close the input dialog after successful search
-          })
-          .withFailureHandler(function(error) {
-            // Display error message in the dialog
-            showMessage('Error: ' + error.message, 'error');
-            console.error("Server-side error:", error);
-            document.body.style.cursor = 'default';
-            // Since there's no button to re-enable, we just keep the error message
-            // and the user can close the dialog manually.
-          })
-          ._performLinkedSlideSearch(presentationIds);
+        // Case 1: Picker provides parent info (user navigated to a folder in My Drive)
+        if (data.parents && data.parents.length > 0) {
+          const parentName = data.parents[0].name;
+          newDocs.forEach(doc => {
+            doc.parentName = parentName; // Add our custom property
+            selectedFiles.set(doc.id, doc);
+          });
+          renderSelectedFilesTable(); // Render immediately with correct parent name
+        } else {
+          // Case 2: Picker does NOT provide parent info (e.g., user used search OR selected from a Shared Drive)
+          // Add docs to the list with a placeholder and trigger a server-side fetch.
+          newDocs.forEach(doc => {
+            doc.parentName = 'Loading...'; // Placeholder text
+            selectedFiles.set(doc.id, doc);
+          });
+          renderSelectedFilesTable(); // Show the new files immediately with the placeholder
 
+          const newFileIds = newDocs.map(doc => doc.id);
+          google.script.run
+            .withSuccessHandler(parentInfoMap => {
+              Object.keys(parentInfoMap).forEach(fileId => {
+                if (selectedFiles.has(fileId)) {
+                  selectedFiles.get(fileId).parentName = parentInfoMap[fileId];
+                }
+              });
+              renderSelectedFilesTable(); // Re-render with the correct parent names
+            })
+            .withFailureHandler(error => {
+              console.error('Failed to fetch parent info:', error);
+              // Handle failure by updating the placeholder text
+              newFileIds.forEach(id => { if (selectedFiles.has(id)) selectedFiles.get(id).parentName = 'Unknown'; });
+              renderSelectedFilesTable();
+            })
+            ._getFileParents(newFileIds.join(','));
+        }
       } else if (data.action === google.picker.Action.CANCEL) {
-        google.script.host.close(); // Close the dialog if picker is cancelled
+        // If the user cancels and no files have been selected yet, close the dialog.
+        // Otherwise, do nothing and let them continue from the selection view.
+        if (selectedFiles.size === 0) {
+          google.script.host.close();
+        }
       }
     }
 
-    // Load the client library first. Once loaded, it will call onClientLoad,
-    // which in turn loads the picker library.
-    gapi.load('client', onClientLoad);
+    /**
+     * Initiates the search for linked slides with the selected files.
+     */
+    function startSearch() {
+      if (selectedFiles.size === 0) {
+        showMessage('No presentations selected. Please select at least one.', 'error');
+        return;
+      }
 
-    // Initial message while APIs are loading
-    showMessage('Loading Google APIs...', 'info');
+      const presentationIds = Array.from(selectedFiles.keys()).join(',');
+
+      // Show a loading indicator and disable buttons
+      document.body.style.cursor = 'wait';
+      showMessage('Searching for linked slides...', 'info');
+      document.getElementById('add-files-btn').disabled = true;
+      document.getElementById('start-search-btn').disabled = true;
+
+      google.script.run
+        .withSuccessHandler(() => google.script.host.close())
+        .withFailureHandler(error => {
+          showMessage('Error: ' + error.message, 'error');
+          console.error("Server-side error:", error);
+          document.body.style.cursor = 'default';
+          document.getElementById('add-files-btn').disabled = false;
+          document.getElementById('start-search-btn').disabled = false;
+        })
+        ._performLinkedSlideSearch(presentationIds);
+    }
+
+    // Initial setup on DOM content loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('add-files-btn').addEventListener('click', createPicker);
+      document.getElementById('start-search-btn').addEventListener('click', startSearch);
+
+      // Load the client library first. Once loaded, it will call onClientLoad,
+      // which in turn loads the picker library.
+      gapi.load('client', onClientLoad);
+
+      // Initial message while APIs are loading
+      showMessage('Loading Google APIs...', 'info');
+    });
   </script>
 </body>
 </html>
