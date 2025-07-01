@@ -73,6 +73,7 @@
     // Access the OAuth token passed from the Apps Script server-side
     const OAUTH_TOKEN = '<?= oauthToken ?>';
     let selectedFiles = new Map();
+    let picker;
 
     /**
      * Displays a message in the dialog.
@@ -133,6 +134,12 @@
         return;
       }
 
+      // If picker is already created, just make it visible. This preserves the user's last folder location.
+      if (picker) {
+        picker.setVisible(true);
+        return;
+      }
+
       // Define the MIME types for Google Slides presentations and folders.
       const presentationMimeType = 'application/vnd.google-apps.presentation';
       const folderMimeType = 'application/vnd.google-apps.folder';
@@ -154,7 +161,7 @@
           .setEnableDrives(true); // Enable Shared Drives for this specific view
 
       // Build the picker
-      const picker = new google.picker.PickerBuilder()
+      picker = new google.picker.PickerBuilder()
           .addView(myDriveView) // Add My Drive browsing
           .addView(sharedDrivesView) // Add Shared Drives browsing
           .enableFeature(google.picker.Feature.MULTISELECT_ENABLED) // Correct method for multi-selection
