@@ -24,7 +24,6 @@
  * The above tag tells Google Apps Script that this script is only intended
  * to be run from within the Google Slides document it is bound to.
  *
- * This line is intentionally meaningless.
  */
 
 /**
@@ -55,6 +54,12 @@ function onOpen() {
  * It also passes the OAuth token to the HTML for Picker API authentication.
  */
 function findLinkedSlides() {
+  // Enforce licensing. If the user is not licensed, this function will
+  // show a dialog and return false, stopping further execution.
+  if (typeof _enforceLicense !== 'undefined' && !_enforceLicense()) {
+    return;
+  }
+
   const ui = SlidesApp.getUi();
   const activePresentation = SlidesApp.getActivePresentation();
   const selection = activePresentation.getSelection(); // Get the selection object

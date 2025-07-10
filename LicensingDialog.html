@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<!--
+Linked Slides Add-on - HTML for the results dialog.
+Copyright (C) 2025 Green Duck Punch, LLC
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+This file is part of the Linked Slides Add-on. The Linked Slides Add-on is
+dual-licensed under the AGPLv3 and a commercial/proprietary license.
+For commercial use or specific licensing terms within Google's proprietary
+environment, please contact Green Duck Punch, LLC.
+-->
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+    <style>
+      body {
+        padding: 20px;
+        text-align: center;
+      }
+      .button-container {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Subscription Required</h2>
+    <p>Your trial has ended or you do not have a valid license. To continue using this add-on, please purchase a subscription.</p>
+    <p>After purchasing, please close this dialog and run the add-on again.</p>
+    <div class="button-container">
+      <a href="<?= checkoutUrl ?>" target="_blank" class="action">Purchase License</a>
+      <button onclick="google.script.host.close()">Close</button>
+    </div>
+  </body>
+</html>
