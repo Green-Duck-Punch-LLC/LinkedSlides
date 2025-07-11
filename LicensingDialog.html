@@ -27,22 +27,55 @@ environment, please contact Green Duck Punch, LLC.
     <base target="_top">
     <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
     <style>
-      body {
+    body {
         padding: 20px;
         text-align: center;
-      }
-      .button-container {
+    }
+    .button-container {
         margin-top: 20px;
-      }
+    }
+    #terms-checkbox-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    #terms-checkbox {
+        margin-right: 10px;
+    }
     </style>
   </head>
   <body>
     <h2>Subscription Required</h2>
     <p>Your trial has ended or you do not have a valid license. To continue using this add-on, please purchase a subscription.</p>
     <p>After purchasing, please close this dialog and run the add-on again.</p>
-    <div class="button-container">
-      <a href="<?= checkoutUrl ?>" target="_blank" class="action">Purchase License</a>
-      <button onclick="google.script.host.close()">Close</button>
+
+    <div id="terms-checkbox-container">
+        <input type="checkbox" id="terms-checkbox">
+        <label for="terms-checkbox">
+            I agree to the
+            <a href="https://www.greenduckpunch.com/terms" target="_blank">Terms of Service</a> and
+            <a href="https://www.greenduckpunch.com/privacy" target="_blank">Privacy Policy</a>
+            of Green Duck Punch, LLC.
+        </label>
     </div>
+
+    <div class="button-container">
+        <button onclick="window.open('<?= checkoutUrl ?>', '_blank')" class="action" id="purchase-button" disabled>Buy Subscription</button>
+        <button onclick="google.script.host.close()">Close</button>
+    </div>
+
+    <script>
+        const termsCheckbox = document.getElementById('terms-checkbox');
+        const purchaseButton = document.getElementById('purchase-button');
+
+        // Initial state: button disabled
+        purchaseButton.disabled = !termsCheckbox.checked;
+
+        // Listen for changes on the checkbox
+        termsCheckbox.addEventListener('change', function() {
+            purchaseButton.disabled = !this.checked;
+        });
+    </script>
   </body>
 </html>
