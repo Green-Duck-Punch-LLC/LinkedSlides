@@ -56,10 +56,16 @@ function _getLicensingConfig() {
     TRIAL_PERIOD_SECONDS: parseInt(properties.getProperty('TRIAL_PERIOD_SECONDS') || '604800', 10),
     // How long to cache a user's "licensed" status in seconds (e.g., 3600 = 1 hour).
     LICENSED_USER_CACHE_EXPIRATION_SECONDS: parseInt(properties.getProperty('LICENSED_USER_CACHE_EXPIRATION_SECONDS') || '3600', 10),
-    // How long to grant access if Paddle API fails, in seconds (e.g., 86400 = 24 hours).
-    PADDLE_ERROR_GRACE_PERIOD_SECONDS: parseInt(properties.getProperty('PADDLE_ERROR_GRACE_PERIOD_SECONDS') || '86400', 10),
+    // How long to grant access if an error occurs, in seconds (e.g., 86400 = 24 hours).
+    ERROR_GRACE_PERIOD_SECONDS: parseInt(properties.getProperty('ERROR_GRACE_PERIOD_SECONDS') || '86400', 10),
     // How long to cache the domain-to-subscription map, in seconds (e.g., 3600 = 1 hour).
     BULK_LICENSE_DOMAIN_MAP_CACHE_EXPIRATION_SECONDS: parseInt(properties.getProperty('BULK_LICENSE_DOMAIN_MAP_CACHE_EXPIRATION_SECONDS') || '3600', 10),
+
+    // --- RevenueCat Configuration (Optional) ---
+    REVENUECAT_API_KEY: properties.getProperty('REVENUECAT_API_KEY'),
+    REVENUECAT_APP_USER_ID_PREFIX: properties.getProperty('REVENUECAT_APP_USER_ID_PREFIX') || 'linked_slides:',
+    REVENUECAT_ENTITLEMENT_ID: properties.getProperty('REVENUECAT_ENTITLEMENT_ID'),
+    REVENUECAT_API_VERSION: properties.getProperty('REVENUECAT_API_VERSION') || '2024-05-29',
   };
 
   config.LOCK_TIMEOUT_MS = parseInt(properties.getProperty('LOCK_TIMEOUT_MS') || '30000', 10); // Default to 30 seconds
@@ -107,17 +113,17 @@ function _isUserLicensed(userEmail) {
     return { licensed: true };
   }
 
-  // 3. Check with Paddle API.
-  try {
-    if (_checkPaddleLicense(userEmail)) {
+   // 3. Check with Paddle or RevenueCat
+   try {
+    if (_checkForLicense(userEmail)) {
       // Cache the positive result.
       userCache.put('is_licensed', 'true', config.LICENSED_USER_CACHE_EXPIRATION_SECONDS);
       return { licensed: true };
     }
   } catch (e) {
-    console.error(`License check failed due to a Paddle API error: ${e.toString()}`);
+    console.error(`License check failed due to an error: ${e.toString()}`);
     // Grant a grace period if Paddle is down.
-    userCache.put('is_licensed', 'true', config.PADDLE_ERROR_GRACE_PERIOD_SECONDS);
+    userCache.put('is_licensed', 'true', config.ERROR_GRACE_PERIOD_SECONDS);
     return { licensed: true };
   }
 
@@ -144,6 +150,26 @@ function _checkAndSetTrialStatus() {
   const trialEndDate = parseInt(firstUseTimestamp, 10) + (config.TRIAL_PERIOD_SECONDS * 1000);
   return new Date().getTime() < trialEndDate;
 }
+
+
+/**
+ * Checks for license using RevenueCat if configured, otherwise falls back to Paddle.
+ *
+ * @param {string} userEmail The user's email address.
+ * @returns {boolean | 'grace'} True if licensed, 'grace' for Paddle API error grace period, otherwise false.
+ */
+function _checkForLicense(userEmail) {
+  const config = _getLicensingConfig();
+  const usingRevenueCat = config.REVENUECAT_API_KEY && config.REVENUECAT_ENTITLEMENT_ID;
+
+  if (usingRevenueCat) {
+    return _checkRevenueCatEntitlement(userEmail);
+  } else {
+    return _checkPaddleLicense(userEmail);
+  }
+}
+
+
 
 /**
  * Orchestrates checking for individual and bulk licenses with Paddle.
@@ -413,4 +439,60 @@ function _showLicensingDialog(checkoutUrl) {
     .setHeight(250)
     .setTitle('Subscription Required');
   SlidesApp.getUi().showModalDialog(htmlOutput, 'Subscription Required');
+}
+
+/**
+ * Checks if a user has an active entitlement in RevenueCat.
+ * @param {string} userEmail The user's email.
+ * @returns {boolean} True if the user has the entitlement, false otherwise.
+ */
+function _checkRevenueCatEntitlement(userEmail) {
+  const config = _getLicensingConfig();
+  const appUserId = config.REVENUECAT_APP_USER_ID_PREFIX + userEmail;
+
+  const response = _revenueCatApiRequest(`/subscribers/${encodeURIComponent(appUserId)}`);
+  const entitlements = response.entitlements;
+
+  if (entitlements && entitlements[config.REVENUECAT_ENTITLEMENT_ID] && entitlements[config.REVENUECAT_ENTITLEMENT_ID].is_active) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Makes a request to the RevenueCat API.
+ * @param {string} endpoint The API endpoint.
+ * @param {string} method The HTTP method (default: 'GET').
+ * @param {object} payload The request payload (for POST/PUT requests).
+ * @returns {object} The parsed JSON response from the API.
+ */
+function _revenueCatApiRequest(endpoint, method = 'GET', payload = null) {
+  const config = _getLicensingConfig();
+  const url = 'https://api.revenuecat.com/v1' + endpoint;
+  const options = {
+    method: method,
+    headers: {
+      'Authorization': `Bearer ${config.REVENUECAT_API_KEY}`,
+      'X-RevenueCat-Version': config.REVENUECAT_API_VERSION,
+      'Content-Type': 'application/json',
+    },
+    muteHttpExceptions: true,
+  };
+
+  if (payload) {
+    options.payload = JSON.stringify(payload);
+  }
+
+  const fullUrl = 'https://api.revenuecat.com/v1' + endpoint;
+  const response = UrlFetchApp.fetch(url, options);
+  const responseCode = response.getResponseCode();
+  const responseBody = response.getContentText();
+
+  if (responseCode >= 200 && responseCode < 300) {
+    return JSON.parse(responseBody);
+  } else {
+    const errorMessage = `RevenueCat API Error: Request to '${method} ${fullUrl}' failed. ` +
+      `Payload: ${options.payload || 'N/A'}. Response: ${responseCode} - ${responseBody}`;
+    throw new Error(errorMessage);
+  }
 }
