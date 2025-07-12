@@ -42,15 +42,19 @@ function _getLicensingConfig() {
     // Get these from your Paddle dashboard.
     PADDLE_API_KEY: properties.getProperty('PADDLE_API_KEY'),
     PADDLE_API_BASE_URL: (properties.getProperty('PADDLE_API_BASE_URL') || 'https://api.paddle.com').replace(/\/$/, ''),
+    PADDLE_FRONTEND_TOKEN: properties.getProperty('PADDLE_FRONTEND_TOKEN'),
+    PADDLE_ENVIRONMENT: properties.getProperty('PADDLE_ENVIRONMENT') || 'production',
 
     // --- Product Configuration ---
     // The ID of your individual subscription product in Paddle.
     PADDLE_INDIVIDUAL_PRODUCT_ID: properties.getProperty('PADDLE_INDIVIDUAL_PRODUCT_ID'),
+    // The ID of your individual subscription price in Paddle.
+    PADDLE_INDIVIDUAL_PRICE_ID: properties.getProperty('PADDLE_INDIVIDUAL_PRICE_ID'),
     // The ID of your bulk/team subscription product in Paddle.
     PADDLE_BULK_PRODUCT_ID: properties.getProperty('PADDLE_BULK_PRODUCT_ID'),
     // The URL for the checkout page, pre-configured in Paddle.
     PADDLE_CHECKOUT_URL: properties.getProperty('PADDLE_CHECKOUT_URL'),
-
+  
     // --- Behavior Configuration ---
     // Trial period in seconds for new users. Default is 7 days (604800 seconds).
     TRIAL_PERIOD_SECONDS: parseInt(properties.getProperty('TRIAL_PERIOD_SECONDS') || '604800', 10),
@@ -87,8 +91,7 @@ function _enforceLicense() {
   if (licenseStatus.licensed) {
     return true;
   } else {
-    const checkoutUrl = _getCheckoutUrl(userEmail);
-    _showLicensingDialog(checkoutUrl);
+    _showLicensingDialog(userEmail);
     return false;
   }
 }
@@ -184,12 +187,14 @@ function _checkPaddleLicense(userEmail) {
     'PADDLE_INDIVIDUAL_PRODUCT_ID',
     'PADDLE_BULK_PRODUCT_ID',
     'PADDLE_CHECKOUT_URL',
+    'PADDLE_FRONTEND_TOKEN',
+    'PADDLE_INDIVIDUAL_PRICE_ID',
   ];
 
   const missingProperties = requiredProperties.filter(prop => !config[prop]);
 
   if (missingProperties.length > 0) {
-    const errorMessage = `Paddle API configuration is incomplete. The following script properties are not set: ${missingProperties.join(', ')}. ` +
+    const errorMessage = `Paddle configuration is incomplete. The following script properties are not set: ${missingProperties.join(', ')}. ` +
       'Please configure them in your Apps Script project settings. Granting temporary access.';
     console.error(errorMessage);
     // Throwing an error here will be caught by _isUserLicensed and treated as a Paddle API failure,
@@ -429,14 +434,19 @@ function _getCheckoutUrl(userEmail) {
 /**
  * Displays a modal dialog prompting the user to purchase a license.
  *
- * @param {string} checkoutUrl The pre-filled URL for the checkout page.
+ * @param {string} email The current user's email.
  */
-function _showLicensingDialog(checkoutUrl) {
+function _showLicensingDialog(email) {
   const template = HtmlService.createTemplateFromFile('LicensingDialog');
-  template.checkoutUrl = checkoutUrl;
+  const config = _getLicensingConfig();
+  template.checkoutUrl = _getCheckoutUrl(email);
+  // Pass the email in a stringified JSON object so it can be safely injected into the javascript even if it happens to contain strange characters.
+  template.userEmail = email;
+  template.config = config;
+
   const htmlOutput = template.evaluate()
-    .setWidth(500)
-    .setHeight(250)
+    .setWidth(1000)
+    .setHeight(1000)
     .setTitle('Subscription Required');
   SlidesApp.getUi().showModalDialog(htmlOutput, 'Subscription Required');
 }

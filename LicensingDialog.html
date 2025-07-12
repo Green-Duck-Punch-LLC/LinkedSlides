@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <!--
 Linked Slides Add-on - HTML for the results dialog.
@@ -23,9 +22,12 @@ For commercial use or specific licensing terms within Google's proprietary
 environment, please contact Green Duck Punch, LLC.
 -->
 <html>
-  <head>
+
+<head>
+    <title>Subscription Required</title>
     <base target="_top">
     <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+    <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
     <style>
     body {
         padding: 20px;
@@ -36,24 +38,33 @@ environment, please contact Green Duck Punch, LLC.
     }
     #terms-checkbox-container {
         display: flex;
-        align-items: center;
+        align-items: first;
         justify-content: center;
         margin-bottom: 20px;
     }
     #terms-checkbox {
         margin-right: 10px;
     }
+    #terms-checkbox-container label {
+        text-align: left;
+    }
+    #price-preview {
+        font-size: large;
+    }
+    #thank-you-container {
+        font-size: 20px;
+        display: none
+    }
     </style>
-  </head>
-  <body>
-    <h2>Subscription Required</h2>
-    <p>Your trial has ended or you do not have a valid license. To continue using this add-on, please purchase a subscription.</p>
-    <p>After purchasing, please close this dialog and run the add-on again.</p>
+</head>
 
+<body onload="initializePaddle()">
+    <div id="purchase-prompt-container">
+    <div id="price-preview"></div>
     <div id="terms-checkbox-container">
         <input type="checkbox" id="terms-checkbox">
         <label for="terms-checkbox">
-            I agree to the
+            I understand that my subscription will only work with my <?= userEmail ?> account and I agree to the
             <a href="https://www.greenduckpunch.com/terms" target="_blank">Terms of Service</a> and
             <a href="https://www.greenduckpunch.com/privacy" target="_blank">Privacy Policy</a>
             of Green Duck Punch, LLC.
@@ -61,10 +72,13 @@ environment, please contact Green Duck Punch, LLC.
     </div>
 
     <div class="button-container">
-        <button onclick="window.open('<?= checkoutUrl ?>', '_blank')" class="action" id="purchase-button" disabled>Buy Subscription</button>
+        <button onclick="openCheckout()" class="action" id="purchase-button" disabled>Checkout</button>
         <button onclick="google.script.host.close()">Close</button>
     </div>
-
+    </div>
+    <div id="thank-you-container">
+        <p><b>Thank you for subscribing! Please close this window and reopen the extension to start using it.</b></p>
+    </div>
     <script>
         const termsCheckbox = document.getElementById('terms-checkbox');
         const purchaseButton = document.getElementById('purchase-button');
@@ -73,9 +87,63 @@ environment, please contact Green Duck Punch, LLC.
         purchaseButton.disabled = !termsCheckbox.checked;
 
         // Listen for changes on the checkbox
-        termsCheckbox.addEventListener('change', function() {
+        termsCheckbox.addEventListener('change', function () {
             purchaseButton.disabled = !this.checked;
         });
+
+        function handlePaddleEvent(ev) {
+            switch (ev.name) {
+                case "checkout.completed":
+                    document.getElementById('purchase-prompt-container').style.display = 'none';
+                    document.getElementById('thank-you-container').style.display = 'block';
+
+                    break;
+            }
+
+        }
+        function initializePaddle() {
+            Paddle.Environment.set('<?= config.PADDLE_ENVIRONMENT ?>');
+            Paddle.Initialize({ 
+                token: '<?= config.PADDLE_FRONTEND_TOKEN ?>',
+                eventCallback: handlePaddleEvent 
+            });
+            getPricePreview();
+        }
+
+        let items = [{
+                    quantity: 1,
+                    priceId: '<?= config.PADDLE_INDIVIDUAL_PRICE_ID ?>',
+                }];
+        let customer = {
+            email: '<?= userEmail ?>'
+        };
+
+        function getPricePreview() {
+            Paddle.PricePreview({
+                items: items
+            })
+                .then(preview => {
+                    const pricePreviewDiv = document.getElementById('price-preview');
+                    if (preview && preview.data && preview.data.details.lineItems && preview.data.details.lineItems.length == 1) {
+                        let item = preview.data.details.lineItems[0];
+                        pricePreviewDiv.innerHTML = `
+                  <p>${item.product.name} - ${item.price.name}: <b>${item.formattedTotals.total}/${item.price.billingCycle.interval}</b></p>
+                `;
+                    } else {
+                        pricePreviewDiv.innerHTML = "<p><b>Could not retrieve price preview.</b></p>";
+                    }
+                });
+        }
+        function openCheckout() {
+            Paddle.Checkout.open({
+                items: items,
+                customer: customer,
+                settings: {
+                    allowLogout: false
+                }
+            });
+        }
     </script>
-  </body>
+</body>
+
 </html>
