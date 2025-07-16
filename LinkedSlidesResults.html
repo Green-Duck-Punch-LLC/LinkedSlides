@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
 Linked Slides Add-on - HTML for the results dialog.
 Copyright (C) 2025 Green Duck Punch, LLC
@@ -20,7 +21,6 @@ dual-licensed under the AGPLv3 and a commercial/proprietary license.
 For commercial use or specific licensing terms within Google's proprietary
 environment, please contact Green Duck Punch, LLC.
 -->
-<!DOCTYPE html>
 <html>
 <head>
   <base target="_top">
@@ -142,6 +142,17 @@ environment, please contact Green Duck Punch, LLC.
       <p class="mb-4 text-gray-700">No linked slides were found in the selected presentations for your currently selected slide(s).</p>
     <? } ?>
 
+    <? if (errors && errors.length > 0) { ?>
+      <div class="my-4">
+        <h3 class="text-xl font-semibold mb-2 text-red-700">Errors encountered:</h3>
+        <ul class="list-disc list-inside text-red-600 space-y-1">
+          <? errors.forEach(error => { ?>
+            <li><?= error ?></li>
+          <? }); ?>
+        </ul>
+      </div>
+    <? } ?>
+
     <table class="min-w-full divide-y divide-gray-200 shadow overflow-hidden sm:rounded-lg">
       <thead class="bg-gray-50">
         <tr>
@@ -175,15 +186,6 @@ environment, please contact Green Duck Punch, LLC.
         <!-- Table rows will be rendered by JavaScript -->
       </tbody>
     </table>
-
-    <? if (errors && errors.length > 0) { ?>
-      <h3 class="text-xl font-semibold mt-6 mb-2 text-red-700">Errors encountered:</h3>
-      <ul class="list-disc list-inside text-red-600 space-y-1">
-        <? errors.forEach(error => { ?>
-          <li><?= error ?></li>
-        <? }); ?>
-      </ul>
-    <? } ?>
   </div>
 
   <!-- Global container for dropdowns to prevent clipping -->
