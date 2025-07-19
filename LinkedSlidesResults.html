@@ -24,57 +24,76 @@ environment, please contact Green Duck Punch, LLC.
 <html>
 <head>
   <base target="_top">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f7fafc;
-      color: #2d3748;
-      padding: 1rem;
+    :root {
+      --bg-color: #f7fafc;
+      --text-color: #222;
     }
-    .container {
+    body {
+      background-color: var(--bg-color);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    
+    #container {
       max-width: 90%;
       margin: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-    th, td {
-      border: 1px solid #e2e8f0; /* Tailwind gray-200 */
-      padding: 0.75rem;
-      text-align: left;
-    }
-    th {
-      background-color: #edf2f7; /* Tailwind gray-100 */
-      cursor: pointer;
+      text-align: center;
       position: relative;
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      & p {
+        margin-bottom: 1rem;
+      }
     }
-    th:hover {
-      background-color: #e2e8f0; /* Tailwind gray-200 */
+
+    #errors {
+      margin: 1rem 0;
     }
+    #container table {
+      width: 100%;
+      border: 1px solid oklab(from var(--bg-color) calc(l * 0.9) a b);
+      & > :not(:last-child), & > tbody > :not(:last-child) {
+        border-top-width: 0px;
+        border-bottom-width: 1px;
+        border-color: oklab(from var(--bg-color) calc(l * 0.2) a b);
+      }
+
+      & thead {
+        background-color: oklab(from var(--bg-color) calc(l * 0.9) a b);
+      }
+      & th, & td {
+        padding: 0.75rem 1.5rem;
+        text-align: left;
+      }
+      & th {
+        text-transform: uppercase;
+      }
+    }
+
     /* Default sort arrow for all sortable columns */
-    th::after {
-      content: ' ↕'; /* Direct Unicode for up-down arrow */
+    th .dropdown::before {
+      content: '\2195'; /* Direct Unicode for up-down arrow */
       color: #a0aec0; /* Light gray for subtlety */
-      font-size: 1.8em; /* Increased size for default arrow */
+      font-size: 29px; /* Match button height */
       margin-left: 0.25rem;
-      line-height: 1; /* Helps with vertical alignment */
+      vertical-align: text-bottom;
     }
     /* Specific arrows for actively sorted columns, overriding the default */
-    th.asc:after {
-      content: ' ↑';
-      color: #2d3748; /* Darker color for active sort */
-      font-size: 2em; /* Increased size for active sort arrows */
-      line-height: 1; /* Helps with vertical alignment */
+    th.asc .dropdown::before {
+      content: '\2191';
+      color: #222; /* Darker color for active sort */
     }
-    th.desc:after {
-      content: ' ↓';
-      color: #2d3748; /* Darker color for active sort */
-      font-size: 2em; /* Increased size for active sort arrows */
-      line-height: 1; /* Helps with vertical alignment */
+    th.desc .dropdown::before {
+      content: '\2193';
+      color: #222; /* Darker color for active sort */
     }
     /* Dropdown styles */
     .dropdown {
@@ -100,15 +119,15 @@ environment, please contact Green Duck Punch, LLC.
       margin-bottom: 5px;
       cursor: pointer;
     }
-    .dropdown-content input[type="checkbox"] {
+    .IGNORED .dropdown-content input[type="checkbox"]{
       margin-right: 8px;
     }
-    .dropdown-button {
+    .IGNORED .dropdown-button {
       background-color: #4a5568; /* Darker gray from tailwind */
       color: white;
       padding: 8px 12px;
       border: none;
-      cursor: pointer;
+      cursor:pointer;
       border-radius: 0.25rem;
       width: 100%; /* Take full width of its container */
       text-align: center;
@@ -120,32 +139,30 @@ environment, please contact Green Duck Punch, LLC.
       justify-content: space-between; /* Space out text and arrow */
       margin-bottom: 0.5rem; /* Space between button and sort arrow */
     }
-    .dropdown-button span {
-        flex-grow: 1; /* Allow text to grow */
-        text-align: left;
-        margin-right: 0.5rem; /* Space before arrow */
+    .dropdown-button span{
+      flex-grow: 1; /* Allow text to grow */
+      text-align: left;
+      margin-right: 0.5rem; /* Space before arrow */
     }
     /* Style for the small dropdown arrow */
     .dropdown-arrow {
-        font-size: 1.2em; /* Make it visible */
-        line-height: 1; /* Align with text */
+      font-size: 1.2em; /* Make it visible */
+      line-height: 1; /* Align with text */
     }
   </style>
 </head>
-<body class="p-4">
-  <div class="container bg-white rounded-lg shadow-md p-6">
-    <h2 class="text-2xl font-bold mb-4 text-gray-800"><?= dialogTitle ?></h2>
-
-    <? if (anyLinkedResults) { ?>
-      <p class="mb-4 text-gray-700">The following slides are involved in linking relationships:</p>
+<body>
+  <div id="container">
+    <? if (anyLinkedResults){ ?>
+      <p class="gray">The following slides are involved in linking relationships:</p>
     <? } else if (displayRowsJson.length > 2 && !anyLinkedResults) { // Check if displayRowsJson is not just '[]' ?>
-      <p class="mb-4 text-gray-700">No linked slides were found in the selected presentations for your currently selected slide(s).</p>
+      <p class="gray">No linked slides were found in the selected presentations for your currently selected slide(s).</p>
     <? } ?>
 
     <? if (errors && errors.length > 0) { ?>
-      <div class="my-4">
-        <h3 class="text-xl font-semibold mb-2 text-red-700">Errors encountered:</h3>
-        <ul class="list-disc list-inside text-red-600 space-y-1">
+      <div id="errors" class="error">
+        <h3>Errors encountered:</h3>
+        <ul>
           <? errors.forEach(error => { ?>
             <li><?= error ?></li>
           <? }); ?>
@@ -153,10 +170,10 @@ environment, please contact Green Duck Punch, LLC.
       </div>
     <? } ?>
 
-    <table class="min-w-full divide-y divide-gray-200 shadow overflow-hidden sm:rounded-lg">
-      <thead class="bg-gray-50">
+    <table>
+      <thead>
         <tr>
-          <th scope="col" id="th-sourceSlidePageNumber" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th scope="col" id="th-sourceSlidePageNumber">
             <div class="dropdown">
                 <button type="button" class="dropdown-button" data-column="sourceSlidePageNumber" data-target="filter-sourceSlidePageNumber">
                     <span>Source Slide #</span> <span class="dropdown-arrow">▼</span>
@@ -164,7 +181,7 @@ environment, please contact Green Duck Punch, LLC.
                 <!-- Dropdown content will be moved here by JS -->
             </div>
           </th>
-          <th scope="col" id="th-targetPresentationName" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th scope="col" id="th-targetPresentationName">
              <div class="dropdown">
                 <button type="button" class="dropdown-button" data-column="targetPresentationName" data-target="filter-targetPresentationName">
                     <span>Target Presentation</span> <span class="dropdown-arrow">▼</span>
@@ -172,7 +189,7 @@ environment, please contact Green Duck Punch, LLC.
                 <!-- Dropdown content will be moved here by JS -->
             </div>
           </th>
-          <th scope="col" id="th-targetSlidePageNumber" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+          <th scope="col" id="th-targetSlidePageNumber">
             <div class="dropdown">
                 <button type="button" class="dropdown-button" data-column="targetSlidePageNumber" data-target="filter-targetSlidePageNumber">
                     <span>Target Slide #</span> <span class="dropdown-arrow">▼</span>
@@ -182,7 +199,7 @@ environment, please contact Green Duck Punch, LLC.
           </th>
         </tr>
       </thead>
-      <tbody id="resultsTableBody" class="bg-white divide-y divide-gray-200">
+      <tbody id="resultsTableBody">
         <!-- Table rows will be rendered by JavaScript -->
       </tbody>
     </table>
@@ -223,24 +240,25 @@ environment, please contact Green Duck Punch, LLC.
             const row = tbody.insertRow();
             // Source Slide # (with link to source slide if applicable)
             const sourceSlideCell = row.insertCell();
-            if (rowData.sourceSlideId) { // Check if sourceSlideId exists for linking
-                sourceSlideCell.innerHTML = "<a href=\"https://docs.google.com/presentation/d/" + activePresentationId + "/edit#slide=id." + rowData.sourceSlideId + "\" target=\"_blank\" class=\"text-blue-600 hover:underline\">" + rowData.sourceSlidePageNumber + "</a>";
+            if (rowData.sourceSlideId){ // Check if sourceSlideId exists for linking
+                sourceSlideCell.innerHTML = "<a href=\"https://docs.google.com/presentation/d/" + activePresentationId + "/edit#slide=id." + rowData.sourceSlideId + "\" target=\"_blank\">" + rowData.sourceSlidePageNumber + "</a>";
             } else {
                 sourceSlideCell.textContent = rowData.sourceSlidePageNumber; // Just display number if no ID
             }
 
             // Target Presentation Name (with link)
             const targetPresCell = row.insertCell();
-            if (rowData.targetPresentationId) {
-                targetPresCell.innerHTML = "<a href=\"https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit\" target=\"_blank\" class=\"text-blue-600 hover:underline\">" + rowData.targetPresentationName + "</a>";
+            if (rowData.targetPresentationId){
+                targetPresCell.innerHTML = "<a href=\"https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit\" target=\"_blank\">" + rowData.targetPresentationName + "</a>";
             } else {
                 targetPresCell.textContent = '';
             }
 
             // Target Slide # (with link to target slide if applicable)
             const targetSlideCell = row.insertCell();
-            if (rowData.targetSlideObjectId) {
-                targetSlideCell.innerHTML = "<a href=\"https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit#slide=id." + rowData.targetSlideObjectId + "\" target=\"_blank\" class=\"text-blue-600 hover:underline\">" + rowData.targetSlidePageNumber + "</a>";
+            if (rowData.targetSlideObjectId){
+                let url = "https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit#slide=id." + rowData.targetSlideObjectId;
+                targetSlideCell.innerHTML = "<a href=\"" + url + "\" target=\"_blank\">" + rowData.targetSlidePageNumber + "</a>";
             } else {
                 targetSlideCell.textContent = '';
             }
@@ -341,7 +359,7 @@ environment, please contact Green Duck Punch, LLC.
                 return String(valA).localeCompare(String(valB));
             });
             
-            // Add the (De)select All checkbox at the very top
+                        // Add the (De)select All checkbox at the very top
             const selectAllLabel = document.createElement('label');
             selectAllLabel.innerHTML = '<input type="checkbox" class="select-all-toggle" data-column="' + key + '"> (De)select All';
             dropdownContent.appendChild(selectAllLabel);
