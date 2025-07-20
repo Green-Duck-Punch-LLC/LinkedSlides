@@ -78,23 +78,6 @@ environment, please contact Green Duck Punch, LLC.
       }
     }
 
-    /* Default sort arrow for all sortable columns */
-    th .dropdown::before {
-      content: '\2195'; /* Direct Unicode for up-down arrow */
-      color: #a0aec0; /* Light gray for subtlety */
-      font-size: 29px; /* Match button height */
-      margin-left: 0.25rem;
-      vertical-align: text-bottom;
-    }
-    /* Specific arrows for actively sorted columns, overriding the default */
-    th.asc .dropdown::before {
-      content: '\2191';
-      color: #222; /* Darker color for active sort */
-    }
-    th.desc .dropdown::before {
-      content: '\2193';
-      color: #222; /* Darker color for active sort */
-    }
     /* Dropdown styles */
     .dropdown {
       position: relative;
@@ -118,6 +101,20 @@ environment, please contact Green Duck Punch, LLC.
       display: block;
       margin-bottom: 5px;
       cursor: pointer;
+    }
+    .dropdown-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      display: block;
+      text-align: left;
+    }
+    .dropdown-item:hover {
+      background-color: #f1f1f1;
+    }
+    .dropdown-divider {
+      margin: 0.5rem 0;
+      border: 0;
+      border-top: 1px solid #e2e8f0;
     }
     .IGNORED .dropdown-content input[type="checkbox"]{
       margin-right: 8px;
@@ -323,6 +320,29 @@ environment, please contact Green Duck Punch, LLC.
 
             dropdownContent.innerHTML = ''; // Clear previous options
 
+            // Add Sort Actions
+            const sortAscDiv = document.createElement('div');
+            sortAscDiv.className = 'dropdown-item';
+            sortAscDiv.textContent = 'Sort Ascending';
+            sortAscDiv.onclick = () => {
+                sortTable(key, 'asc');
+                dropdownContent.style.display = 'none'; // Close dropdown
+            };
+            dropdownContent.appendChild(sortAscDiv);
+
+            const sortDescDiv = document.createElement('div');
+            sortDescDiv.className = 'dropdown-item';
+            sortDescDiv.textContent = 'Sort Descending';
+            sortDescDiv.onclick = () => {
+                sortTable(key, 'desc');
+                dropdownContent.style.display = 'none'; // Close dropdown
+            };
+            dropdownContent.appendChild(sortDescDiv);
+
+            const hr = document.createElement('hr');
+            hr.className = 'dropdown-divider';
+            dropdownContent.appendChild(hr);
+
             const uniqueValues = new Set();
             originalTableData.forEach(row => {
                 uniqueValues.add(row[key]);
@@ -471,16 +491,6 @@ environment, please contact Green Duck Punch, LLC.
         renderTable(); // Re-render the filtered data
     }
 
-    /**
-     * Handles a click on a sort header.
-     * @param header {DOMElement} the element that was clicked
-     * @param columnKey {string} the key of the column being sorted
-     */
-     function handleSortClick(header, columnKey) {
-      let sortDirection = header.classList.contains('asc') ? 'desc' : 'asc';
-      sortTable(columnKey, sortDirection);
-    }
-
     // Close dropdowns when clicking outside
     window.onclick = function(event) {
         if (!event.target.closest('.dropdown-button') && !event.target.closest('.dropdown-content')) {
@@ -493,24 +503,6 @@ environment, please contact Green Duck Punch, LLC.
     // Initial setup
     document.addEventListener('DOMContentLoaded', (event) => {
         populateFilterDropdowns(); // Populate dropdowns first
-
-        // Attach event listeners to column headers for sorting
-        document.getElementById('th-sourceSlidePageNumber').addEventListener('click', function(e) {
-            // Prevent sorting if the click was on the dropdown button itself
-            if (!e.target.closest('.dropdown-button')) {
-              handleSortClick(this, 'sourceSlidePageNumber');
-            }
-        });
-        document.getElementById('th-targetPresentationName').addEventListener('click', function(e) {
-            if (!e.target.closest('.dropdown-button')) {
-              handleSortClick(this, 'targetPresentationName');
-            }
-        });
-        document.getElementById('th-targetSlidePageNumber').addEventListener('click', function(e) {
-            if (!e.target.closest('.dropdown-button')) {
-              handleSortClick(this, 'targetSlidePageNumber');
-            }
-        });
 
         // Attach event listeners to dropdown buttons for toggling dropdowns
         document.querySelectorAll('.dropdown-button').forEach(button => {
