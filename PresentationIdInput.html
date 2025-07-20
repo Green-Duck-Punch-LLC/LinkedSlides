@@ -24,68 +24,136 @@
 <html>
 <head>
   <base target="_top">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
   <style>
+    :root {
+      --bg-color: #f7fafc;
+      --text-color: #222;
+    }
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f7fafc;
-      color: #2d3748;
+      background-color: var(--bg-color);
       padding: 1rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 100vh; /* Ensure it takes full viewport height */
+      min-height: 100vh;
     }
-    .container {
+
+    #container {
       max-width: 90%;
       margin: auto;
-      text-align: center; /* Center content within the container */
+      text-align: center;
+      position: relative;
+      background-color: white;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     }
-    /* Simple styling for the message area */
+
+    #initial-view {
+      margin-bottom: 1rem;
+      color: oklab(from var(--text-color) calc(l * 0.7) a b);
+    }
+
+    #message {
+      display: hidden;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border-radius: 0.5rem;
+    }
+    
     .message-info {
-      background-color: #e0f2fe; /* light blue */
-      border: 1px solid #90cdf4; /* blue border */
-      color: #2b6cb0; /* dark blue text */
+      background-color: #e0f2fe;
+      border: 1px solid #90cdf4;
     }
+
     .message-error {
-      background-color: #fee2e2; /* light red */
-      border: 1px solid #fc8181; /* red border */
-      color: #c53030; /* dark red text */
+      background-color: #fee2e2;
+      border: 1px solid #fc8181;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #selection-view {
+      width: 100%;
+    }
+
+    #files {
+      overflow-x: auto;
+      border: 1px;
+      border-radius: 0.5rem;
+      margin-bottom: 2em;
+    }
+
+    #selection-view table {
+      min-width: 100%;
+      border: 1px;
+      & > :not(:last-child), & > tbody > :not(:last-child) {
+        border-top-width: 0px;
+        border-bottom-width: 1px;
+        border-color: oklab(from var(--bg-color) calc(l * 0.2) a b);
+      }
+
+      & thead {
+        background-color: oklab(from var(--bg-color) calc(l * 0.05) a b);;
+        color: oklab(from var(--text-color) 1 a b);
+      }
+      & th, & td {
+        padding: 0.75rem 1.5rem;
+        text-align: left;
+      }
+      & th {
+        text-transform: uppercase;
+      }
+    }
+/*
+    #dummy-div {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: red;
+      cursor: not-allowed;
+    }
+*/
+    .wait {
+      cursor: wait;
     }
   </style>
 </head>
-<body class="p-4">
+<body>
   <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
 
-  <div class="container bg-white rounded-lg shadow-md p-6">
-    <h1 class="text-2xl font-bold mb-4 text-gray-800">Find Linked Slides</h1>
-
+  <div id="container">
     <div id="initial-view">
-      <p class="mb-4 text-gray-700">Please wait while the file selection dialog loads...</p>
+      <p>Please wait while the file selection dialog loads...</p>
     </div>
 
-    <div id="message" class="hidden p-3 mb-4 rounded-md text-sm" role="alert"></div>
+    <div id="message" role="alert"></div>
 
-    <div id="selection-view" class="hidden w-full">
-      <h2 class="text-xl font-semibold mb-2 text-gray-800">Files to search</h2>
-      <div class="overflow-x-auto border rounded-lg mb-4">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+    <div>
+      <button id="start-search-btn" class="action" disabled>Start Search</button>
+      <button id="add-files-btn">Add Files</button>
+    </div>
+
+    <div id="selection-view" class="hidden">
+      <div id="files">
+        <h2>Files to Search</h2>
+        <table>
+          <thead>
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Containing Folder</th>
+              <th scope="col"><b>File Name</b></th>
+              <th scope="col"><b>Containing Folder</b></th>
             </tr>
           </thead>
-          <tbody id="files-table-body" class="bg-white divide-y divide-gray-200">
+          <tbody id="files-table-body">
             <!-- Rows will be added here by JavaScript -->
           </tbody>
         </table>
-      </div>
-      <div class="flex justify-end space-x-4">
-        <button id="add-files-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add Files</button>
-        <button id="start-search-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" disabled>Start Search</button>
       </div>
     </div>
   </div>
@@ -104,8 +172,7 @@
     function showMessage(msg, type = 'info') {
       const messageDiv = document.getElementById('message');
       messageDiv.textContent = msg;
-      messageDiv.className = `p-3 mb-4 rounded-md text-sm message-${type}`;
-      messageDiv.classList.remove('hidden');
+      messageDiv.className = `${type} message-${type}`;
     }
 
     /**
@@ -215,20 +282,21 @@
 
       selectedFiles.forEach(file => {
         const row = tableBody.insertRow();
-        row.className = 'hover:bg-gray-100';
 
         const nameCell = row.insertCell();
         nameCell.textContent = file.name;
-        nameCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
 
         const folderCell = row.insertCell();
         // A file can have multiple parents. We'll display the first one.
         // The parentName is now attached directly to the file object. Default if missing.
         folderCell.textContent = file.parentName || 'My Drive';
-        folderCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
       });
 
       document.getElementById('start-search-btn').disabled = false;
+    }
+
+    function setCursor(cursor) {
+      document.body.style.cursor = cursor;
     }
 
     /**
@@ -306,17 +374,21 @@
       const presentationIds = Array.from(selectedFiles.keys()).join(',');
 
       // Show a loading indicator and disable buttons
-      document.body.style.cursor = 'wait';
+      setCursor('wait');
       showMessage('Searching for linked slides...', 'info');
       document.getElementById('add-files-btn').disabled = true;
       document.getElementById('start-search-btn').disabled = true;
 
       google.script.run
-        .withSuccessHandler(() => google.script.host.close())
+        .withSuccessHandler(() => {
+          setCursor('auto');
+          showMessage('Search complete!', 'info');
+          google.script.host.close();
+        })
         .withFailureHandler(error => {
           showMessage('Error: ' + error.message, 'error');
           console.error("Server-side error:", error);
-          document.body.style.cursor = 'default';
+          setCursor('auto');
           document.getElementById('add-files-btn').disabled = false;
           document.getElementById('start-search-btn').disabled = false;
         })
@@ -334,6 +406,12 @@
 
       // Initial message while APIs are loading
       showMessage('Loading Google APIs...', 'info');
+    });
+    // prevent tabbing out of the dialog
+    document.addEventListener('keydown', function(e) {
+      if (e.key === "Tab") {
+        e.preventDefault();
+      }
     });
   </script>
 </body>
