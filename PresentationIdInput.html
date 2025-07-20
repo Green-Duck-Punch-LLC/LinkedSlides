@@ -108,8 +108,8 @@
 
     #table-scroll-wrapper.is-scrolling {
       /* Fade out only the bottom to indicate more content, top is visible due to sticky header */
-      -webkit-mask-image: linear-gradient(to bottom, black 0, black calc(100% - 2.5rem), transparent 100%);
-      mask-image: linear-gradient(to bottom, black 0, black calc(100% - 2.5rem), transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 0, black calc(100% - 3.5rem), transparent 100%);
+      mask-image: linear-gradient(to bottom, black 0, black calc(100% - 3.5rem), transparent 100%);
     }
 
     #selection-view table {
@@ -299,6 +299,30 @@
     }
 
     /**
+     * Checks the scroll position of the file list and applies or removes the
+     * bottom-fade effect accordingly. The fade is only shown when the list
+     * is scrollable and not at the very bottom.
+     */
+    function handleScrollFade() {
+      const tableWrapper = document.getElementById('table-scroll-wrapper');
+      const isScrollable = tableWrapper.scrollHeight > tableWrapper.clientHeight;
+
+      if (!isScrollable) {
+        tableWrapper.classList.remove('is-scrolling');
+        return;
+      }
+      
+      // A small buffer is used to account for potential floating point inaccuracies.
+      const isAtBottom = tableWrapper.scrollHeight - tableWrapper.scrollTop - tableWrapper.clientHeight < 1;
+
+      if (isAtBottom) {
+        tableWrapper.classList.remove('is-scrolling');
+      } else {
+        tableWrapper.classList.add('is-scrolling');
+      }
+    }
+
+    /**
      * Renders the table of selected files and updates UI visibility.
      */
     function renderSelectedFilesTable() {
@@ -331,13 +355,7 @@
 
       // Use a small timeout to allow the browser to render and calculate heights correctly.
       // This determines if the scroll fade effect should be applied.
-      setTimeout(() => {
-        if (tableWrapper.scrollHeight > tableWrapper.clientHeight) {
-          tableWrapper.classList.add('is-scrolling');
-        } else {
-          tableWrapper.classList.remove('is-scrolling');
-        }
-      }, 0);
+      setTimeout(handleScrollFade, 0);
 
       document.getElementById('start-search-btn').disabled = false;
     }
@@ -446,6 +464,8 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('add-files-btn').addEventListener('click', createPicker);
       document.getElementById('start-search-btn').addEventListener('click', startSearch);
+
+      document.getElementById('table-scroll-wrapper').addEventListener('scroll', handleScrollFade);
 
       // Load the client library first. Once loaded, it will call onClientLoad,
       // which in turn loads the picker library.
