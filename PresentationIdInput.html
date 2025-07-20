@@ -407,12 +407,6 @@
       // Initial message while APIs are loading
       showMessage('Loading Google APIs...', 'info');
     });
-    // prevent tabbing out of the dialog
-    document.addEventListener('keydown', function(e) {
-      if (e.key === "Tab") {
-        e.preventDefault();
-      }
-    });
   </script>
 </body>
 </html>
