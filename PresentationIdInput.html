@@ -83,7 +83,9 @@
     #selection-view {
       width: 100%;
       flex-grow: 1; /* Allow this section to grow and fill space */
-      overflow-y: auto; /* Enable vertical scrolling for the file list */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* Contain the scrolling of the child table wrapper */
     }
 
     #selection-view:focus {
@@ -92,9 +94,22 @@
     }
 
     #files {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      overflow: hidden; /* This is important for the flex layout to work correctly with a scrolling child */
+    }
+
+    #table-scroll-wrapper {
+      flex-grow: 1;
+      overflow-y: auto;
       overflow-x: auto;
-      border: 1px;
-      border-radius: 0.5rem;
+    }
+
+    #table-scroll-wrapper.is-scrolling {
+      /* Fade out only the bottom to indicate more content, top is visible due to sticky header */
+      -webkit-mask-image: linear-gradient(to bottom, black 0, black calc(100% - 2.5rem), transparent 100%);
+      mask-image: linear-gradient(to bottom, black 0, black calc(100% - 2.5rem), transparent 100%);
     }
 
     #selection-view table {
@@ -109,6 +124,9 @@
       & thead {
         background-color: oklab(from var(--bg-color) calc(l * 0.05) a b);;
         color: oklab(from var(--text-color) 1 a b);
+        position: sticky; /* Make the header sticky */
+        top: 0;           /* Stick to the top of the scrolling container */
+        z-index: 1;       /* Ensure it stays above the scrolling body */
       }
       & th, & td {
         padding: 0.75rem 1.5rem;
@@ -153,17 +171,19 @@
     <div id="selection-view" class="hidden">
       <div id="files">
         <h2>Files to Search</h2>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col"><b>File Name</b></th>
-              <th scope="col"><b>Containing Folder</b></th>
-            </tr>
-          </thead>
-          <tbody id="files-table-body">
-            <!-- Rows will be added here by JavaScript -->
-          </tbody>
-        </table>
+        <div id="table-scroll-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col"><b>File Name</b></th>
+                <th scope="col"><b>Containing Folder</b></th>
+              </tr>
+            </thead>
+            <tbody id="files-table-body">
+              <!-- Rows will be added here by JavaScript -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -282,18 +302,20 @@
      * Renders the table of selected files and updates UI visibility.
      */
     function renderSelectedFilesTable() {
+      const selectionView = document.getElementById('selection-view');
+      const tableWrapper = document.getElementById('table-scroll-wrapper');
       const tableBody = document.getElementById('files-table-body');
       tableBody.innerHTML = ''; // Clear existing rows
 
       if (selectedFiles.size === 0) {
-        document.getElementById('selection-view').classList.add('hidden');
+        selectionView.classList.add('hidden');
         document.getElementById('initial-view').classList.remove('hidden');
         document.getElementById('start-search-btn').disabled = true;
         return;
       }
 
       document.getElementById('initial-view').classList.add('hidden');
-      document.getElementById('selection-view').classList.remove('hidden');
+      selectionView.classList.remove('hidden');
 
       selectedFiles.forEach(file => {
         const row = tableBody.insertRow();
@@ -306,6 +328,16 @@
         // The parentName is now attached directly to the file object. Default if missing.
         folderCell.textContent = file.parentName || 'My Drive';
       });
+
+      // Use a small timeout to allow the browser to render and calculate heights correctly.
+      // This determines if the scroll fade effect should be applied.
+      setTimeout(() => {
+        if (tableWrapper.scrollHeight > tableWrapper.clientHeight) {
+          tableWrapper.classList.add('is-scrolling');
+        } else {
+          tableWrapper.classList.remove('is-scrolling');
+        }
+      }, 0);
 
       document.getElementById('start-search-btn').disabled = false;
     }
