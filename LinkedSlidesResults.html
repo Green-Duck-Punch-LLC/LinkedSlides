@@ -213,8 +213,6 @@ environment, please contact Green Duck Punch, LLC.
     let tableData = JSON.parse('<?= displayRowsJson ?>');
     // activePresentationId is passed from the Apps Script server-side
     const activePresentationId = '<?= activePresentationId ?>';
-    let currentSortColumn = 'sourceSlidePageNumber'; // Default sort column
-    let sortDirection = 'asc'; // Default sort direction
 
     // Store original data for filtering resets
     const originalTableData = JSON.parse('<?= displayRowsJson ?>');
@@ -267,28 +265,16 @@ environment, please contact Green Duck Punch, LLC.
 
     /**
      * Sorts the table data by a given column.
-     * @param {HTMLElement} header The clicked table header element.
      * @param {string} columnKey The key in the data object to sort by.
+     * @param {string} direction The direction to sort ('asc' or 'desc').
      */
-    function sortTable(header, columnKey) {
+    function sortTable(columnKey, direction) {
         // Remove sort arrows from all headers
         document.querySelectorAll('th').forEach(th => {
-            // Only remove asc/desc classes if it's not the currently clicked header
-            if (th !== header) {
-                th.classList.remove('asc', 'desc');
-            }
+          th.classList.remove('asc', 'desc');
         });
-
-        if (currentSortColumn === columnKey) {
-            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-        } else {
-            currentSortColumn = columnKey;
-            sortDirection = 'asc';
-        }
-
-        // Add new class to the clicked header
-        header.classList.remove('asc', 'desc'); // Clear previous
-        header.classList.add(sortDirection); // Add current
+        let header = document.getElementById('th-' + columnKey);
+        header.classList.add(direction);
 
         tableData.sort((a, b) => {
             const valA = a[columnKey];
@@ -312,7 +298,7 @@ environment, please contact Green Duck Punch, LLC.
                 }
             }
 
-            return sortDirection === 'asc' ? comparison : -comparison;
+            return direction === 'asc' ? comparison : -comparison;
         });
         renderTable();
     }
@@ -485,6 +471,16 @@ environment, please contact Green Duck Punch, LLC.
         renderTable(); // Re-render the filtered data
     }
 
+    /**
+     * Handles a click on a sort header.
+     * @param header {DOMElement} the element that was clicked
+     * @param columnKey {string} the key of the column being sorted
+     */
+     function handleSortClick(header, columnKey) {
+      let sortDirection = header.classList.contains('asc') ? 'desc' : 'asc';
+      sortTable(columnKey, sortDirection);
+    }
+
     // Close dropdowns when clicking outside
     window.onclick = function(event) {
         if (!event.target.closest('.dropdown-button') && !event.target.closest('.dropdown-content')) {
@@ -502,17 +498,17 @@ environment, please contact Green Duck Punch, LLC.
         document.getElementById('th-sourceSlidePageNumber').addEventListener('click', function(e) {
             // Prevent sorting if the click was on the dropdown button itself
             if (!e.target.closest('.dropdown-button')) {
-                sortTable(this, 'sourceSlidePageNumber');
+              handleSortClick(this, 'sourceSlidePageNumber');
             }
         });
         document.getElementById('th-targetPresentationName').addEventListener('click', function(e) {
             if (!e.target.closest('.dropdown-button')) {
-                sortTable(this, 'targetPresentationName');
+              handleSortClick(this, 'targetPresentationName');
             }
         });
         document.getElementById('th-targetSlidePageNumber').addEventListener('click', function(e) {
             if (!e.target.closest('.dropdown-button')) {
-                sortTable(this, 'targetSlidePageNumber');
+              handleSortClick(this, 'targetSlidePageNumber');
             }
         });
 
@@ -525,7 +521,7 @@ environment, please contact Green Duck Punch, LLC.
         });
 
         // Initial sort and render when the dialog loads
-        sortTable(document.querySelector('#th-sourceSlidePageNumber'), 'sourceSlidePageNumber'); // Use ID for specific selection
+        sortTable('sourceSlidePageNumber', 'asc');
     });
   </script>
 </body>
