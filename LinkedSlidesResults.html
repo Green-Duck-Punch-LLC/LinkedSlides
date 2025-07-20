@@ -107,18 +107,25 @@ environment, please contact Green Duck Punch, LLC.
       cursor: pointer;
       display: block;
       text-align: left;
-      /* Reset button-specific styles */
+      /* Reset button-specific styles from add-ons1.css */
       background: none;
       border: none;
+      border-radius: 0;
+      box-shadow: none;
       width: 100%;
       margin: 0;
-      padding: 8px 12px;
       font-family: inherit;
       font-size: inherit;
+      font-weight: normal;
       color: inherit;
+      height: auto;
+      line-height: inherit;
     }
     .dropdown-item:hover {
       background-color: #f1f1f1;
+      /* Ensure hover doesn't re-introduce button styles */
+      border: none;
+      box-shadow: none;
     }
     .dropdown-divider {
       margin: 0.5rem 0;
