@@ -107,6 +107,15 @@ environment, please contact Green Duck Punch, LLC.
       cursor: pointer;
       display: block;
       text-align: left;
+      /* Reset button-specific styles */
+      background: none;
+      border: none;
+      width: 100%;
+      margin: 0;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
     }
     .dropdown-item:hover {
       background-color: #f1f1f1;
@@ -145,6 +154,10 @@ environment, please contact Green Duck Punch, LLC.
     .dropdown-arrow {
       font-size: 1.2em; /* Make it visible */
       line-height: 1; /* Align with text */
+    }
+    .dropdown-button:focus {
+      outline: 2px solid #4285f4;
+      outline-offset: 2px;
     }
   </style>
 </head>
@@ -321,23 +334,25 @@ environment, please contact Green Duck Punch, LLC.
             dropdownContent.innerHTML = ''; // Clear previous options
 
             // Add Sort Actions
-            const sortAscDiv = document.createElement('div');
-            sortAscDiv.className = 'dropdown-item';
-            sortAscDiv.textContent = 'Sort Ascending';
-            sortAscDiv.onclick = () => {
+            const sortAscBtn = document.createElement('button');
+            sortAscBtn.type = 'button';
+            sortAscBtn.className = 'dropdown-item';
+            sortAscBtn.textContent = 'Sort Ascending';
+            sortAscBtn.onclick = () => {
                 sortTable(key, 'asc');
-                dropdownContent.style.display = 'none'; // Close dropdown
+                closeDropdownAndFocusButton(key);
             };
-            dropdownContent.appendChild(sortAscDiv);
+            dropdownContent.appendChild(sortAscBtn);
 
-            const sortDescDiv = document.createElement('div');
-            sortDescDiv.className = 'dropdown-item';
-            sortDescDiv.textContent = 'Sort Descending';
-            sortDescDiv.onclick = () => {
+            const sortDescBtn = document.createElement('button');
+            sortDescBtn.type = 'button';
+            sortDescBtn.className = 'dropdown-item';
+            sortDescBtn.textContent = 'Sort Descending';
+            sortDescBtn.onclick = () => {
                 sortTable(key, 'desc');
-                dropdownContent.style.display = 'none'; // Close dropdown
+                closeDropdownAndFocusButton(key);
             };
-            dropdownContent.appendChild(sortDescDiv);
+            dropdownContent.appendChild(sortDescBtn);
 
             const hr = document.createElement('hr');
             hr.className = 'dropdown-divider';
@@ -395,6 +410,23 @@ environment, please contact Green Duck Punch, LLC.
 
             // Set initial state of "Select All" checkbox to true after all options are populated
             selectAllCheckbox.checked = true;
+
+            // Add accessibility event listeners
+            dropdownContent.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    e.stopPropagation();
+                    closeDropdownAndFocusButton(key);
+                }
+            });
+
+            dropdownContent.addEventListener('focusout', (e) => {
+                // If focus moves to an element not within this dropdown, close it.
+                if (!dropdownContent.contains(e.relatedTarget)) {
+                    dropdownContent.style.display = 'none';
+                    const button = document.querySelector(`.dropdown-button[data-column="${key}"]`);
+                    if (button) button.setAttribute('aria-expanded', 'false');
+                }
+            });
         });
     }
 
@@ -429,26 +461,47 @@ environment, please contact Green Duck Punch, LLC.
      * @param {string} columnKey The key of the column for which to toggle dropdown.
      */
     function toggleDropdown(event, columnKey) {
-        event.stopPropagation(); // Prevent sortTable from being called simultaneously
+        event.stopPropagation();
         const dropdownContent = dropdownContentCache[columnKey]; // Get from cache
         const dropdownButton = event.currentTarget; // The button that was clicked
 
+        const wasOpen = dropdownContent.style.display === 'block';
+
         // Close all other dropdowns
         document.querySelectorAll('.dropdown-content').forEach(content => {
-            if (content.id !== `filter-${columnKey}`) {
-                content.style.display = 'none';
-            }
+            content.style.display = 'none';
+        });
+        document.querySelectorAll('.dropdown-button').forEach(btn => {
+            btn.setAttribute('aria-expanded', 'false');
         });
 
-        if (dropdownContent.style.display === 'block') {
-            dropdownContent.style.display = 'none';
-        } else {
+        // If the clicked one was not open, then open it.
+        if (!wasOpen) {
+            dropdownButton.setAttribute('aria-expanded', 'true');
             // Calculate position relative to the viewport
             const rect = dropdownButton.getBoundingClientRect();
             dropdownContent.style.left = rect.left + 'px';
             dropdownContent.style.top = (rect.bottom + 5) + 'px'; // 5px buffer below the button
             dropdownContent.style.display = 'block';
+            // Focus the first focusable item in the dropdown
+            const firstItem = dropdownContent.querySelector('button.dropdown-item, input[type="checkbox"]');
+            if (firstItem) {
+                firstItem.focus();
+            }
         }
+    }
+
+    /**
+     * Closes a specific dropdown and returns focus to its trigger button.
+     * @param {string} columnKey The key for the column's dropdown to close.
+     */
+    function closeDropdownAndFocusButton(columnKey) {
+        const dropdownContent = dropdownContentCache[columnKey];
+        const button = document.querySelector(`.dropdown-button[data-column="${columnKey}"]`);
+
+        if (dropdownContent) dropdownContent.style.display = 'none';
+        if (button) button.setAttribute('aria-expanded', 'false');
+        if (button) button.focus();
     }
 
     /**
@@ -497,6 +550,9 @@ environment, please contact Green Duck Punch, LLC.
             document.querySelectorAll('.dropdown-content').forEach(content => {
                 content.style.display = 'none';
             });
+            document.querySelectorAll('.dropdown-button').forEach(btn => {
+                btn.setAttribute('aria-expanded', 'false');
+            });
         }
     };
 
@@ -504,10 +560,14 @@ environment, please contact Green Duck Punch, LLC.
     document.addEventListener('DOMContentLoaded', (event) => {
         populateFilterDropdowns(); // Populate dropdowns first
 
-        // Attach event listeners to dropdown buttons for toggling dropdowns
+        // Attach event listeners and ARIA attributes to dropdown buttons
         document.querySelectorAll('.dropdown-button').forEach(button => {
+            const columnKey = button.dataset.column;
+            button.setAttribute('aria-haspopup', 'true');
+            button.setAttribute('aria-expanded', 'false');
+            button.setAttribute('aria-controls', `filter-${columnKey}`);
+
             button.addEventListener('click', function(event) {
-                const columnKey = this.dataset.column;
                 toggleDropdown(event, columnKey);
             });
         });
