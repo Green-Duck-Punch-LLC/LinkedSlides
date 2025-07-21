@@ -190,11 +190,14 @@ function _performLinkedSlideSearch(presentationIdsString) {
   const anyLinkedResults = displayRows.some(row => row.targetPresentationId !== '');
   const dialogTitle = anyLinkedResults ? 'Linked Slides Found' : 'No Linked Slides Found';
 
+  const searchTimestamp = new Date().toISOString(); // Generate timestamp for data freshness
+
   // Create a template for the results HTML and pass data
   const resultTemplate = HtmlService.createTemplateFromFile('LinkedSlidesResults');
   resultTemplate.displayRowsJson = JSON.stringify(displayRows);
   resultTemplate.activePresentationId = activePresentationId;
   resultTemplate.dialogTitle = dialogTitle;
+  resultTemplate.searchTimestamp = searchTimestamp;
   resultTemplate.anyLinkedResults = anyLinkedResults;
   resultTemplate.errors = errors;
 
