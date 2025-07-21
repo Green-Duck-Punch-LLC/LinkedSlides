@@ -142,9 +142,24 @@ environment, please contact Green Duck Punch, LLC.
       font-size: 1.2em; /* Make it visible */
       line-height: 1; /* Align with text */
     }
+    #loading-overlay {
+      position: fixed; /* Cover the whole viewport */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
+      z-index: 2000; /* Above other content */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #333;
+      font-size: 1.2em;
+    }
   </style>
 </head>
 <body>
+  <div id="loading-overlay" style="display: none;"><span>Determining selection...</span></div>
   <div id="container">
     <? if (anyLinkedResults){ ?>
       <p class="gray">The following slides are involved in linking relationships:</p>
@@ -304,31 +319,24 @@ environment, please contact Green Duck Punch, LLC.
      * Applies a pre-defined filter scope to the source slide column.
      * This function now handles dynamic fetching of selection.
      * @param {string} scope The filter scope ('all', 'selected').
-     * @param {HTMLElement} triggerElement The element that triggered the filter (e.g., a button).
      */
-    function applySourceFilter(scope, triggerElement) {
+    function applySourceFilter(scope) {
         const columnKey = 'sourceSlidePageNumber';
         const dropdownContent = dropdownContentCache[columnKey];
         const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
+        const loadingOverlay = document.getElementById('loading-overlay');
 
         if (scope === 'all') {
             checkboxes.forEach(cb => { cb.checked = true; });
             filterTable();
         } else { // 'selected'
-            // Provide user feedback that we are fetching data
-            if (triggerElement) {
-              triggerElement.style.pointerEvents = 'none';
-              triggerElement.style.color = '#999';
-              triggerElement.textContent += ' (loading...)';
-            }
+            // Show loading overlay to indicate work and block UI
+            if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
             google.script.run
                 .withSuccessHandler(selectionInfo => {
-                    if (triggerElement) {
-                        triggerElement.style.pointerEvents = 'auto';
-                        triggerElement.style.color = '#222';
-                        triggerElement.textContent = triggerElement.textContent.replace(' (loading...)', '');
-                    }
+                    if (loadingOverlay) loadingOverlay.style.display = 'none';
+
                     const slideIdsToMatch = new Set(selectionInfo.selectedSlideIds || []);
                     const sourcePageNumbersToSelect = new Set();
                     originalTableData.forEach(row => {
@@ -336,15 +344,12 @@ environment, please contact Green Duck Punch, LLC.
                             sourcePageNumbersToSelect.add(String(row.sourceSlidePageNumber));
                         }
                     });
+
                     checkboxes.forEach(cb => { cb.checked = sourcePageNumbersToSelect.has(cb.value); });
                     filterTable();
                 })
                 .withFailureHandler(err => {
-                    if (triggerElement) {
-                        triggerElement.style.pointerEvents = 'auto';
-                        triggerElement.style.color = '#222';
-                        triggerElement.textContent = triggerElement.textContent.replace(' (loading...)', '');
-                    }
+                    if (loadingOverlay) loadingOverlay.style.display = 'none';
                     console.error('Failed to get selection info:', err);
                     alert('Could not update selection from the presentation. Please try again.');
                 })
@@ -380,7 +385,7 @@ environment, please contact Green Duck Punch, LLC.
                     button.textContent = text;
                     button.onclick = (e) => {
                         e.preventDefault();
-                        applySourceFilter(scope, button);
+                        applySourceFilter(scope);
                         closeDropdownAndFocusButton(key);
                     };
                     dropdownContent.appendChild(button);
