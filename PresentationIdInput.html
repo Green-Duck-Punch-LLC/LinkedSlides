@@ -37,7 +37,6 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
     }
 
     #container {
@@ -52,11 +51,6 @@
       display: flex;
       flex-direction: column;
       max-height: 85vh; /* Ensure dialog doesn't exceed viewport height */
-    }
-
-    #initial-view {
-      margin-bottom: 1rem;
-      color: oklab(from var(--text-color) calc(l * 0.7) a b);
     }
 
     #message {
@@ -162,10 +156,6 @@
   <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
 
   <div id="container">
-    <div id="initial-view">
-      <p>Please wait while the file selection dialog loads...</p>
-    </div>
-
     <div id="message" role="alert"></div>
 
     <div id="selection-view" class="hidden">
@@ -293,6 +283,7 @@
           .setOAuthToken(gapi.auth.getToken().access_token) // Set the OAuth token for authentication
           .setCallback(pickerCallback) // Set the callback function for when selections are made
           .setOrigin(google.script.host.origin) // CRUCIAL FIX: Use google.script.host.origin
+          .setSize(566,350) // Minimum size, to prevent scrolling
           .build();
 
       picker.setVisible(true); // Display the picker dialog
@@ -333,12 +324,10 @@
 
       if (selectedFiles.size === 0) {
         selectionView.classList.add('hidden');
-        document.getElementById('initial-view').classList.remove('hidden');
         document.getElementById('start-search-btn').disabled = true;
         return;
       }
 
-      document.getElementById('initial-view').classList.add('hidden');
       selectionView.classList.remove('hidden');
 
       selectedFiles.forEach(file => {
