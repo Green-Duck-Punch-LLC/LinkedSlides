@@ -44,8 +44,27 @@
 function onOpen() {
   SlidesApp.getUi()
       .createAddonMenu() // Appropriate for Google Workspace Add-on deployment
-      .addItem('Find linked copies of selected slides', 'findLinkedSlides')
+      .addItem('Find linked copies of selected slides', 'launchLinkedSlides')
       .addToUi();
+}
+
+
+/**
+ * Launches the link finder if it's not already launching. This ensures that 
+ * if the user selects the menu item again, another dialog won't be shown when 
+ * the first one closes.
+ */
+function launchLinkedSlides() {
+  const userCache = CacheService.getUserCache();
+  if (userCache.get('is_launching')) {
+    return;
+  }
+  userCache.put('is_launching', 'true', 60);
+  try {
+    findLinkedSlides();
+  } finally {
+    userCache.remove('is_launching');
+  }
 }
 
 /**
@@ -54,7 +73,7 @@ function onOpen() {
  * It also passes the OAuth token to the HTML for Picker API authentication.
  */
 function findLinkedSlides() {
-  // Enforce licensing. If the user is not licensed, this function will
+    // Enforce licensing. If the user is not licensed, this function will
   // show a dialog and return false, stopping further execution.
   if (typeof _enforceLicense !== 'undefined' && !_enforceLicense()) {
     return;
