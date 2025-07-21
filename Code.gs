@@ -227,13 +227,11 @@ function _performLinkedSlideSearch(presentationIdsString) {
   resultTemplate.anyLinkedResults = anyLinkedResults;
   resultTemplate.errors = errors;
 
-  // Evaluate the template and display the dialog
+  // Evaluate the template and display the sidebar
   const resultHtmlOutput = resultTemplate.evaluate()
-      .setTitle('Linked Slides Search Results')
-      .setWidth(1000)
-      .setHeight(750); // Increased height to prevent clipping
+      .setTitle(dialogTitle);
 
-  ui.showModalDialog(resultHtmlOutput, 'Linked Slides Search Results');
+  ui.showSidebar(resultHtmlOutput);
 }
 
 /**
