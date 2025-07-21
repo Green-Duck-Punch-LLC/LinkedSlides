@@ -79,31 +79,6 @@ function findLinkedSlides() {
     return;
   }
 
-  const ui = SlidesApp.getUi();
-  const activePresentation = SlidesApp.getActivePresentation();
-  const selection = activePresentation.getSelection(); // Get the selection object
-  let selectedSlides = [];
-
-  if (selection) {
-    const pageRange = selection.getPageRange();
-    if (pageRange) {
-      // If a page range is selected (one or more slides explicitly selected)
-      selectedSlides = pageRange.getPages();
-    } else {
-      // If no page range is selected, try to get the current page (single slide focus)
-      const currentPage = selection.getCurrentPage();
-      if (currentPage) {
-        selectedSlides = [currentPage]; // Use the current page as the selected slide
-      }
-    }
-  }
-
-  // If no slides were found via selection or current page, alert the user.
-  if (selectedSlides.length === 0) {
-    ui.alert('No Slides Selected', 'Please select one or more slides, or ensure a slide is currently in view, before running this function.', ui.ButtonSet.OK);
-    return;
-  }
-
   // Get the OAuth token for the current user. This token is required by the Picker API
   // to authenticate the user and access their Google Drive files.
   const oauthToken = ScriptApp.getOAuthToken();
@@ -122,7 +97,7 @@ function findLinkedSlides() {
       .setSandboxMode(HtmlService.SandboxMode.IFRAME); // IFRAME mode is recommended for security
 
   // Display the dialog.
-  ui.showModalDialog(htmlOutput, 'Find Linked Slides');
+  SlidesApp.getUi().showModalDialog(htmlOutput, 'Find Linked Slides');
 }
 
 /**
@@ -134,40 +109,18 @@ function findLinkedSlides() {
 function _performLinkedSlideSearch(presentationIdsString) {
   const ui = SlidesApp.getUi();
   const activePresentation = SlidesApp.getActivePresentation();
-  const selection = activePresentation.getSelection();
-  let selectedPagesFromSelection = [];
-
-  if (selection) {
-    const pageRange = selection.getPageRange();
-    if (pageRange) {
-      selectedPagesFromSelection = pageRange.getPages();
-    } else {
-      const currentPage = selection.getCurrentPage();
-      if (currentPage) {
-        selectedPagesFromSelection = [currentPage];
-      }
-    }
-  }
-
   const activePresentationId = activePresentation.getId();
 
-  // Get all slides in the active presentation (these are SlidesApp.Slide objects).
-  const allSlidesInActivePresentation = activePresentation.getSlides();
-
-  // Map to hold selected source slides and track if they've been linked.
-  const selectedSourceSlidesMap = {};
-  selectedPagesFromSelection.forEach(selectedPage => {
-      const slideId = selectedPage.getObjectId();
-      const slideIndex = allSlidesInActivePresentation.findIndex(s => s.getObjectId() === slideId);
-      if (slideIndex !== -1) {
-          const pageNumber = slideIndex + 1;
-
-          selectedSourceSlidesMap[slideId] = {
-              id: slideId, // This is the object ID, crucial for the link
-              pageNumber: pageNumber,
-              foundLink: false // Flag to track if this source slide has been found as linked in any target
-          };
-      }
+  // Get all slides in the active presentation and create a map to track their linking status.
+  const allSourceSlidesMap = {}; // Maps slideId to {id, pageNumber, foundLink}
+  activePresentation.getSlides().forEach((slide, index) => {
+    const slideId = slide.getObjectId();
+    const pageNumber = index + 1;
+    allSourceSlidesMap[slideId] = {
+      id: slideId,
+      pageNumber: pageNumber,
+      foundLink: false // Flag to track if a link is found
+    };
   });
 
   const displayRows = []; // This will be the final array of rows for the table
@@ -198,14 +151,13 @@ function _performLinkedSlideSearch(presentationIdsString) {
           const linkedSourcePresentationId = slide.getSourcePresentationId();
           const linkedSourceSlideId = slide.getSourceSlideObjectId();
 
-          // Check if the linked slide's source presentation ID matches the active presentation's ID
-          // AND if its source slide ID matches one of the currently selected slides.
-          if (linkedSourcePresentationId === activePresentationId && selectedSourceSlidesMap[linkedSourceSlideId]) {
-            selectedSourceSlidesMap[linkedSourceSlideId].foundLink = true; // Mark as found
+          // Check if the linked slide's source is ANY slide in the active presentation.
+          if (linkedSourcePresentationId === activePresentationId && allSourceSlidesMap[linkedSourceSlideId]) {
+            allSourceSlidesMap[linkedSourceSlideId].foundLink = true; // Mark as found
 
             displayRows.push({
-              sourceSlidePageNumber: selectedSourceSlidesMap[linkedSourceSlideId].pageNumber,
-              sourceSlideId: selectedSourceSlidesMap[linkedSourceSlideId].id, // Pass the source slide's ID
+              sourceSlidePageNumber: allSourceSlidesMap[linkedSourceSlideId].pageNumber,
+              sourceSlideId: linkedSourceSlideId,
               targetPresentationName: targetPresentationName,
               targetPresentationId: targetId,
               targetSlidePageNumber: index + 1, // Slide index is 0-based, convert to 1-based page number
@@ -220,16 +172,16 @@ function _performLinkedSlideSearch(presentationIdsString) {
     }
   }
 
-  // Now, add rows for any selected source slides that were NOT found to be linked in any target presentations
-  for (const slideId in selectedSourceSlidesMap) {
-    if (selectedSourceSlidesMap.hasOwnProperty(slideId) && !selectedSourceSlidesMap[slideId].foundLink) {
+  // Now, add rows for any source slides that were NOT found to be linked in any target presentations.
+  for (const slideId in allSourceSlidesMap) {
+    if (allSourceSlidesMap.hasOwnProperty(slideId) && !allSourceSlidesMap[slideId].foundLink) {
       displayRows.push({
-        sourceSlidePageNumber: selectedSourceSlidesMap[slideId].pageNumber,
-        sourceSlideId: selectedSourceSlidesMap[slideId].id, // Pass the source slide's ID
-        targetPresentationName: '', // Empty for unlinked
-        targetPresentationId: '',   // Empty for unlinked
-        targetSlidePageNumber: '',  // Empty for unlinked
-        targetSlideObjectId: ''     // Empty for unlinked
+        sourceSlidePageNumber: allSourceSlidesMap[slideId].pageNumber,
+        sourceSlideId: allSourceSlidesMap[slideId].id,
+        targetPresentationName: '',
+        targetPresentationId: '',
+        targetSlidePageNumber: '',
+        targetSlideObjectId: ''
       });
     }
   }
@@ -251,6 +203,32 @@ function _performLinkedSlideSearch(presentationIdsString) {
       .setTitle(dialogTitle);
 
   ui.showSidebar(resultHtmlOutput);
+}
+
+/**
+ * Gets the current slide and selected slides from the active presentation.
+ * This function can be called from the client to get up-to-date selection info.
+ * @return {Object} An object containing `currentSlideId` and `selectedSlideIds` array.
+ */
+function _getSelectionInfo() {
+  const presentation = SlidesApp.getActivePresentation();
+  const selection = presentation.getSelection();
+  let selectedSlideIds = [];
+  let currentSlideId = null;
+
+  if (selection) {
+    const pageRange = selection.getPageRange();
+    if (pageRange) {
+      selectedSlideIds = pageRange.getPages().map(p => p.getObjectId());
+    }
+    const currentPage = selection.getCurrentPage();
+    if (currentPage) {
+      currentSlideId = currentPage.getObjectId();
+      // If no slides are selected in the filmstrip, the "current" slide is the selection.
+      if (selectedSlideIds.length === 0 && currentSlideId) selectedSlideIds.push(currentSlideId);
+    }
+  }
+  return { currentSlideId, selectedSlideIds };
 }
 
 /**

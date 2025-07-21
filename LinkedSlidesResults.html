@@ -301,6 +301,58 @@ environment, please contact Green Duck Punch, LLC.
     }
 
     /**
+     * Applies a pre-defined filter scope to the source slide column.
+     * This function now handles dynamic fetching of selection.
+     * @param {string} scope The filter scope ('all', 'selected').
+     * @param {HTMLElement} triggerElement The element that triggered the filter (e.g., a button).
+     */
+    function applySourceFilter(scope, triggerElement) {
+        const columnKey = 'sourceSlidePageNumber';
+        const dropdownContent = dropdownContentCache[columnKey];
+        const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
+
+        if (scope === 'all') {
+            checkboxes.forEach(cb => { cb.checked = true; });
+            filterTable();
+        } else { // 'selected'
+            // Provide user feedback that we are fetching data
+            if (triggerElement) {
+              triggerElement.style.pointerEvents = 'none';
+              triggerElement.style.color = '#999';
+              triggerElement.textContent += ' (loading...)';
+            }
+
+            google.script.run
+                .withSuccessHandler(selectionInfo => {
+                    if (triggerElement) {
+                        triggerElement.style.pointerEvents = 'auto';
+                        triggerElement.style.color = '#222';
+                        triggerElement.textContent = triggerElement.textContent.replace(' (loading...)', '');
+                    }
+                    const slideIdsToMatch = new Set(selectionInfo.selectedSlideIds || []);
+                    const sourcePageNumbersToSelect = new Set();
+                    originalTableData.forEach(row => {
+                        if (slideIdsToMatch.has(row.sourceSlideId)) {
+                            sourcePageNumbersToSelect.add(String(row.sourceSlidePageNumber));
+                        }
+                    });
+                    checkboxes.forEach(cb => { cb.checked = sourcePageNumbersToSelect.has(cb.value); });
+                    filterTable();
+                })
+                .withFailureHandler(err => {
+                    if (triggerElement) {
+                        triggerElement.style.pointerEvents = 'auto';
+                        triggerElement.style.color = '#222';
+                        triggerElement.textContent = triggerElement.textContent.replace(' (loading...)', '');
+                    }
+                    console.error('Failed to get selection info:', err);
+                    alert('Could not update selection from the presentation. Please try again.');
+                })
+                ._getSelectionInfo();
+        }
+    }
+
+    /**
      * Populates the filter dropdowns with unique values from each column.
      */
     function populateFilterDropdowns() {
@@ -319,6 +371,28 @@ environment, please contact Green Duck Punch, LLC.
             dropdownContentCache[key] = dropdownContent;
 
             dropdownContent.innerHTML = ''; // Clear previous options
+
+            if (key === 'sourceSlidePageNumber') {
+                const createFilterLink = (text, scope) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'dropdown-item';
+                    button.textContent = text;
+                    button.onclick = (e) => {
+                        e.preventDefault();
+                        applySourceFilter(scope, button);
+                        closeDropdownAndFocusButton(key);
+                    };
+                    dropdownContent.appendChild(button);
+                };
+                
+                createFilterLink('Show All', 'all');
+                createFilterLink('Selected Slides Only', 'selected');
+
+                const hr = document.createElement('hr');
+                hr.className = 'dropdown-divider';
+                dropdownContent.appendChild(hr);
+            }
 
             // Add Sort Actions
             const sortAscBtn = document.createElement('button');
