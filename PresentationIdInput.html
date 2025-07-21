@@ -49,6 +49,9 @@
       border-radius: 0.5rem;
       padding: 1.5rem;
       box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      display: flex;
+      flex-direction: column;
+      max-height: 85vh; /* Ensure dialog doesn't exceed viewport height */
     }
 
     #initial-view {
@@ -79,13 +82,34 @@
 
     #selection-view {
       width: 100%;
+      flex-grow: 1; /* Allow this section to grow and fill space */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* Contain the scrolling of the child table wrapper */
+    }
+
+    #selection-view:focus {
+      outline: 2px solid #4d90fe; /* A standard Google-blue focus ring */
+      outline-offset: 2px;
     }
 
     #files {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      overflow: hidden; /* This is important for the flex layout to work correctly with a scrolling child */
+    }
+
+    #table-scroll-wrapper {
+      flex-grow: 1;
+      overflow-y: auto;
       overflow-x: auto;
-      border: 1px;
-      border-radius: 0.5rem;
-      margin-bottom: 2em;
+    }
+
+    #table-scroll-wrapper.is-scrolling {
+      /* Fade out only the bottom to indicate more content, top is visible due to sticky header */
+      -webkit-mask-image: linear-gradient(to bottom, black 0, black calc(100% - 3.5rem), transparent 100%);
+      mask-image: linear-gradient(to bottom, black 0, black calc(100% - 3.5rem), transparent 100%);
     }
 
     #selection-view table {
@@ -100,6 +124,9 @@
       & thead {
         background-color: oklab(from var(--bg-color) calc(l * 0.05) a b);;
         color: oklab(from var(--text-color) 1 a b);
+        position: sticky; /* Make the header sticky */
+        top: 0;           /* Stick to the top of the scrolling container */
+        z-index: 1;       /* Ensure it stays above the scrolling body */
       }
       & th, & td {
         padding: 0.75rem 1.5rem;
@@ -123,6 +150,12 @@
     .wait {
       cursor: wait;
     }
+
+    #dialog-actions {
+      margin-top: 1.5rem;
+      flex-shrink: 0; /* Prevent this container from shrinking */
+      text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -135,26 +168,28 @@
 
     <div id="message" role="alert"></div>
 
-    <div>
-      <button id="start-search-btn" class="action" disabled>Start search</button>
-      <button id="add-files-btn">Add files</button>
-    </div>
-
     <div id="selection-view" class="hidden">
       <div id="files">
         <h2>Files to Search</h2>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col"><b>File Name</b></th>
-              <th scope="col"><b>Containing Folder</b></th>
-            </tr>
-          </thead>
-          <tbody id="files-table-body">
-            <!-- Rows will be added here by JavaScript -->
-          </tbody>
-        </table>
+        <div id="table-scroll-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col"><b>File Name</b></th>
+                <th scope="col"><b>Containing Folder</b></th>
+              </tr>
+            </thead>
+            <tbody id="files-table-body">
+              <!-- Rows will be added here by JavaScript -->
+            </tbody>
+          </table>
+        </div>
       </div>
+    </div>
+
+    <div id="dialog-actions">
+      <button id="start-search-btn" class="action" disabled>Start search</button>
+      <button id="add-files-btn">Add files</button>
     </div>
   </div>
 
@@ -264,21 +299,47 @@
     }
 
     /**
+     * Checks the scroll position of the file list and applies or removes the
+     * bottom-fade effect accordingly. The fade is only shown when the list
+     * is scrollable and not at the very bottom.
+     */
+    function handleScrollFade() {
+      const tableWrapper = document.getElementById('table-scroll-wrapper');
+      const isScrollable = tableWrapper.scrollHeight > tableWrapper.clientHeight;
+
+      if (!isScrollable) {
+        tableWrapper.classList.remove('is-scrolling');
+        return;
+      }
+      
+      // A small buffer is used to account for potential floating point inaccuracies.
+      const isAtBottom = tableWrapper.scrollHeight - tableWrapper.scrollTop - tableWrapper.clientHeight < 1;
+
+      if (isAtBottom) {
+        tableWrapper.classList.remove('is-scrolling');
+      } else {
+        tableWrapper.classList.add('is-scrolling');
+      }
+    }
+
+    /**
      * Renders the table of selected files and updates UI visibility.
      */
     function renderSelectedFilesTable() {
+      const selectionView = document.getElementById('selection-view');
+      const tableWrapper = document.getElementById('table-scroll-wrapper');
       const tableBody = document.getElementById('files-table-body');
       tableBody.innerHTML = ''; // Clear existing rows
 
       if (selectedFiles.size === 0) {
-        document.getElementById('selection-view').classList.add('hidden');
+        selectionView.classList.add('hidden');
         document.getElementById('initial-view').classList.remove('hidden');
         document.getElementById('start-search-btn').disabled = true;
         return;
       }
 
       document.getElementById('initial-view').classList.add('hidden');
-      document.getElementById('selection-view').classList.remove('hidden');
+      selectionView.classList.remove('hidden');
 
       selectedFiles.forEach(file => {
         const row = tableBody.insertRow();
@@ -291,6 +352,10 @@
         // The parentName is now attached directly to the file object. Default if missing.
         folderCell.textContent = file.parentName || 'My Drive';
       });
+
+      // Use a small timeout to allow the browser to render and calculate heights correctly.
+      // This determines if the scroll fade effect should be applied.
+      setTimeout(handleScrollFade, 0);
 
       document.getElementById('start-search-btn').disabled = false;
     }
@@ -399,6 +464,8 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('add-files-btn').addEventListener('click', createPicker);
       document.getElementById('start-search-btn').addEventListener('click', startSearch);
+
+      document.getElementById('table-scroll-wrapper').addEventListener('scroll', handleScrollFade);
 
       // Load the client library first. Once loaded, it will call onClientLoad,
       // which in turn loads the picker library.
