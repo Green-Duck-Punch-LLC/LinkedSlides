@@ -44,7 +44,7 @@
 function onOpen() {
   SlidesApp.getUi()
       .createAddonMenu() // Appropriate for Google Workspace Add-on deployment
-      .addItem('Find linked copies of selected slides', 'launchLinkedSlides')
+      .addItem('Find linked copies', 'launchLinkedSlides')
       .addToUi();
 }
 
