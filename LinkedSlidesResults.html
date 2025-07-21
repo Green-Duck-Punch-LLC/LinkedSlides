@@ -161,12 +161,14 @@ environment, please contact Green Duck Punch, LLC.
 <body>
   <div id="loading-overlay" style="display: none;"><span>Determining selection...</span></div>
   <div id="container">
+      <p class="gray">
     <? if (anyLinkedResults){ ?>
-      <p class="gray">The following slides are involved in linking relationships:</p>
+      The following slide(s) were involved in linking relationships
     <? } else if (displayRowsJson.length > 2 && !anyLinkedResults) { // Check if displayRowsJson is not just '[]' ?>
-      <p class="gray">No linked slides were found in the selected presentations for your currently selected slide(s).</p>
+      No linked slides were found in the selected presentations
     <? } ?>
-
+        <span id="results-timestamp-message"></span>.
+      </p>
     <? if (errors && errors.length > 0) { ?>
       <div id="errors" class="error">
         <h3>Errors encountered:</h3>
@@ -225,6 +227,7 @@ environment, please contact Green Duck Punch, LLC.
     let tableData = JSON.parse('<?= displayRowsJson ?>');
     // activePresentationId is passed from the Apps Script server-side
     const activePresentationId = '<?= activePresentationId ?>';
+    const searchTimestampString = '<?= searchTimestamp ?>';
 
     // Store original data for filtering resets
     const originalTableData = JSON.parse('<?= displayRowsJson ?>');
@@ -624,6 +627,22 @@ environment, please contact Green Duck Punch, LLC.
 
     // Initial setup
     document.addEventListener('DOMContentLoaded', (event) => {
+        if (searchTimestampString && searchTimestampString !== 'undefined' && searchTimestampString !== '') {
+            const timestampEl = document.getElementById('results-timestamp-message');
+            if (timestampEl) {
+                try {
+                    const date = new Date(searchTimestampString);
+                    // Format to user's local date and time, e.g., "Jun 29, 2025, 4:30 PM"
+                    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+                    const formattedDateTime = date.toLocaleString([], options);
+                    timestampEl.textContent = `as of ${formattedDateTime}`;
+                } catch (e) {
+                    console.error("Could not parse or format timestamp:", e);
+                    // Fallback to default message is implicit as we don't change the textContent on error
+                }
+            }
+        }
+
         populateFilterDropdowns(); // Populate dropdowns first
 
         // Attach event listeners and ARIA attributes to dropdown buttons
