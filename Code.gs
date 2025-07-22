@@ -83,11 +83,19 @@ function findLinkedSlides() {
   // to authenticate the user and access their Google Drive files.
   const oauthToken = ScriptApp.getOAuthToken();
 
+  // Retrieve previously selected files for this presentation from user properties.
+  const presentationId = SlidesApp.getActivePresentation().getId();
+  const userProperties = PropertiesService.getUserProperties();
+  const propertyKey = `linkedSlides.selectedFiles.${presentationId}`;
+  const initialFilesJson = userProperties.getProperty(propertyKey);
+
   // Create a template from the HTML file. This allows us to pass variables
   // (like the OAuth token) from the server-side script to the client-side HTML.
   const template = HtmlService.createTemplateFromFile('PresentationIdInput');
   template.oauthToken = oauthToken; // Pass the token to the template
-
+  // Pass the saved files (or an empty array string) to the template.
+  template.initialFilesJson = initialFilesJson || '[]';
+  
   // Evaluate the template to get the final HTML output.
   // Set the title, dimensions, and sandbox mode for the dialog.
   const htmlOutput = template.evaluate()
@@ -232,6 +240,21 @@ function _getSelectionInfo() {
     }
   }
   return { currentSlideId, selectedSlideIds };
+}
+
+/**
+ * Saves the user's selected files to search against for the current presentation.
+ * This uses UserProperties, which are scoped to the user and the script, allowing
+ * selections to be remembered for each presentation.
+ * @param {string} selectedFilesJson A JSON string of the file objects to save.
+ *     Each object contains id, name, and parentName.
+ */
+function _saveSelectedFiles(selectedFilesJson) {
+  const presentationId = SlidesApp.getActivePresentation().getId();
+  const userProperties = PropertiesService.getUserProperties();
+  // Create a unique key for this presentation to store its selected files.
+  const propertyKey = `linkedSlides.selectedFiles.${presentationId}`;
+  userProperties.setProperty(propertyKey, selectedFilesJson);
 }
 
 /**

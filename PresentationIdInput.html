@@ -130,6 +130,21 @@
         text-transform: uppercase;
       }
     }
+
+    #selection-view table th.action-col, #selection-view table td.action-col {
+      width: 1%;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    #selection-view table td button.remove-btn {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    #selection-view table td button.remove-btn:hover { color: #d93025; }
 /*
     #dummy-div {
       position: absolute;
@@ -167,6 +182,7 @@
               <tr>
                 <th scope="col"><b>File Name</b></th>
                 <th scope="col"><b>Containing Folder</b></th>
+                <th scope="col" class="action-col"><b>Action</b></th>
               </tr>
             </thead>
             <tbody id="files-table-body">
@@ -186,7 +202,9 @@
   <script type="text/javascript">
     // Access the OAuth token passed from the Apps Script server-side
     const OAUTH_TOKEN = '<?= oauthToken ?>';
-    let selectedFiles = new Map();
+    // Load initial files saved for this presentation
+    const initialFiles = JSON.parse('<?= initialFilesJson ?>' || '[]');
+    let selectedFiles = new Map(initialFiles.map(f => [f.id, f]));
     let picker;
 
     /**
@@ -221,7 +239,7 @@
           access_token: OAUTH_TOKEN
         });
         // Now that gapi.client is initialized and authenticated, load the Picker API
-        gapi.load('picker', { callback: onPickerLoaded });
+        gapi.load('picker', { callback: onPickerApiReady });
       }, function(error) {
         console.error("Error initializing gapi client:", error);
         showMessage("Error initializing Google APIs. Please check your browser console for details.", 'error');
@@ -230,13 +248,18 @@
 
     /**
      * Callback function for when the Google Picker API is loaded.
-     * Automatically creates and displays the picker.
+     * Automatically creates and displays the picker if no files were pre-loaded.
      */
-    function onPickerLoaded() {
-      hideMessage(); // Hide any initial loading message
-      // Automatically open the picker for the initial selection.
-      createPicker();
+    function onPickerApiReady() {
+      // If the dialog opens and no files have ever been selected for this presentation,
+      // show the picker immediately to guide the user.
+      if (selectedFiles.size === 0) {
+        hideMessage(); // Hide any initial loading message
+        createPicker();
+      }
     }
+
+
 
     /**
      * Creates and displays the Google Picker dialog.
@@ -340,6 +363,10 @@
         // A file can have multiple parents. We'll display the first one.
         // The parentName is now attached directly to the file object. Default if missing.
         folderCell.textContent = file.parentName || 'My Drive';
+
+        const actionCell = row.insertCell();
+        actionCell.className = 'action-col';
+        actionCell.innerHTML = `<button type="button" class="remove-btn" data-file-id="${file.id}">Remove</button>`;
       });
 
       // Use a small timeout to allow the browser to render and calculate heights correctly.
@@ -351,6 +378,33 @@
 
     function setCursor(cursor) {
       document.body.style.cursor = cursor;
+    }
+
+    /**
+     * Saves the current list of selected files to the server as a JSON string.
+     */
+    function saveSelectedFiles() {
+      // Convert the Map values (the file objects) to an array and stringify for transport.
+      const filesToSave = JSON.stringify(Array.from(selectedFiles.values()));
+      google.script.run
+        .withFailureHandler(err => {
+            console.error("Failed to save file list:", err);
+            showMessage("Could not save file selection. Changes may not be remembered.", 'error');
+        })
+        ._saveSelectedFiles(filesToSave);
+    }
+
+    /**
+     * Handles clicks on the file table, specifically for the "Remove" button.
+     * @param {Event} event The click event.
+     */
+    function handleTableClick(event) {
+      if (event.target.matches('.remove-btn')) {
+        const fileId = event.target.dataset.fileId;
+        selectedFiles.delete(fileId);
+        renderSelectedFilesTable();
+        saveSelectedFiles();
+      }
     }
 
     /**
@@ -379,10 +433,12 @@
             doc.parentName = parentName; // Add our custom property
             selectedFiles.set(doc.id, doc);
           });
-          renderSelectedFilesTable(); // Render immediately with correct parent name
+          renderSelectedFilesTable();
+          saveSelectedFiles();
         } else {
           // Case 2: Picker does NOT provide parent info (e.g., user used search OR selected from a Shared Drive)
           // Add docs to the list with a placeholder and trigger a server-side fetch.
+          let allInfoFetched = false;
           newDocs.forEach(doc => {
             doc.parentName = 'Loading...'; // Placeholder text
             selectedFiles.set(doc.id, doc);
@@ -397,13 +453,15 @@
                   selectedFiles.get(fileId).parentName = parentInfoMap[fileId];
                 }
               });
-              renderSelectedFilesTable(); // Re-render with the correct parent names
+              renderSelectedFilesTable();
+              saveSelectedFiles();
             })
             .withFailureHandler(error => {
               console.error('Failed to fetch parent info:', error);
               // Handle failure by updating the placeholder text
               newFileIds.forEach(id => { if (selectedFiles.has(id)) selectedFiles.get(id).parentName = 'Unknown'; });
               renderSelectedFilesTable();
+              saveSelectedFiles();
             })
             ._getFileParents(newFileIds.join(','));
         }
@@ -453,15 +511,19 @@
     document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('add-files-btn').addEventListener('click', createPicker);
       document.getElementById('start-search-btn').addEventListener('click', startSearch);
-
+      document.getElementById('files-table-body').addEventListener('click', handleTableClick);
       document.getElementById('table-scroll-wrapper').addEventListener('scroll', handleScrollFade);
 
+      renderSelectedFilesTable(); // Render any pre-loaded files
+
       // Load the client library first. Once loaded, it will call onClientLoad,
-      // which in turn loads the picker library.
+      // which in turn loads the picker library and may open it.
       gapi.load('client', onClientLoad);
 
-      // Initial message while APIs are loading
-      showMessage('Loading Google APIs...', 'info');
+      if (selectedFiles.size === 0) {
+        // Initial message while APIs are loading, shown only if we expect to open the picker.
+        showMessage('Loading Google APIs...', 'info');
+      }
     });
   </script>
 </body>
