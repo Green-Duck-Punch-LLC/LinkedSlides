@@ -83,11 +83,19 @@ function findLinkedSlides() {
   // to authenticate the user and access their Google Drive files.
   const oauthToken = ScriptApp.getOAuthToken();
 
+  // Retrieve previously selected files for this presentation from user properties.
+  const presentationId = SlidesApp.getActivePresentation().getId();
+  const userProperties = PropertiesService.getUserProperties();
+  const propertyKey = `linkedSlides.selectedFileIds.${presentationId}`;
+  const initialFileIdsJson = userProperties.getProperty(propertyKey);
+
   // Create a template from the HTML file. This allows us to pass variables
   // (like the OAuth token) from the server-side script to the client-side HTML.
   const template = HtmlService.createTemplateFromFile('PresentationIdInput');
   template.oauthToken = oauthToken; // Pass the token to the template
-
+  // Pass the saved files (or an empty array string) to the template.
+  template.initialFileIdsJson = initialFileIdsJson || '[]';
+  
   // Evaluate the template to get the final HTML output.
   // Set the title, dimensions, and sandbox mode for the dialog.
   const htmlOutput = template.evaluate()
@@ -232,6 +240,55 @@ function _getSelectionInfo() {
     }
   }
   return { currentSlideId, selectedSlideIds };
+}
+
+/**
+ * Saves the user's selected files to search against for the current presentation.
+ * This uses UserProperties, which are scoped to the user and the script, allowing
+ * selections (as file IDs) to be remembered for each presentation.
+ * @param {string} selectedFileIdsJson A JSON string of an array of file IDs to save.
+ */
+function _saveSelectedFiles(selectedFileIdsJson) {
+  const presentationId = SlidesApp.getActivePresentation().getId();
+  const userProperties = PropertiesService.getUserProperties();
+  // Create a unique key for this presentation to store its selected files.
+  const propertyKey = `linkedSlides.selectedFileIds.${presentationId}`;
+  userProperties.setProperty(propertyKey, selectedFileIdsJson);
+}
+
+/**
+ * Gets the details (id, name, parentName) for a given set of file IDs.
+ * This is used to load the most up-to-date file information.
+ * @param {string[]} fileIds An array of file IDs.
+ * @return {Object[]} An array of file objects, each with {id, name, parentName}.
+ *                    Files that are not found or accessible are omitted.
+ */
+function _getFileDetailsForIds(fileIds) {
+  if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
+    return [];
+  }
+
+  const fileDetails = [];
+  fileIds.forEach(id => {
+    try {
+      // Note: This requires the Drive API v2 Advanced Service.
+      // Fetch file name and parent IDs in one call.
+      const file = Drive.Files.get(id, { fields: 'id,title,parents', supportsAllDrives: true });
+      let parentName = 'My Drive'; // Default parent name
+
+      if (file.parents && file.parents.length > 0) {
+        // A file can have multiple parents; we'll use the first one.
+        const parentId = file.parents[0].id;
+        const parentFolder = Drive.Files.get(parentId, { fields: 'title', supportsAllDrives: true }); // 'title' is the field for name in v2
+        parentName = parentFolder.title;
+      }
+      fileDetails.push({ id: file.id, name: file.title, parentName: parentName });
+    } catch (e) {
+      // If file not found or other error, omit it from the results.
+      console.error(`Could not get details for file ID ${id}: ${e.toString()}`);
+    }
+  });
+  return fileDetails;
 }
 
 /**
