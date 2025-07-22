@@ -138,13 +138,8 @@
     }
 
     #selection-view table td button.remove-btn {
-      background: none;
-      border: none;
-      color: #888;
-      cursor: pointer;
-      text-decoration: underline;
+      min-width: unset;
     }
-    #selection-view table td button.remove-btn:hover { color: #d93025; }
 /*
     #dummy-div {
       position: absolute;
@@ -366,7 +361,7 @@
 
         const actionCell = row.insertCell();
         actionCell.className = 'action-col';
-        actionCell.innerHTML = `<button type="button" class="remove-btn" data-file-id="${file.id}">Remove</button>`;
+        actionCell.innerHTML = `<button type="button" class="remove-btn" data-file-id="${file.id}">❌</button>`;
       });
 
       // Use a small timeout to allow the browser to render and calculate heights correctly.
