@@ -243,6 +243,30 @@ function _getSelectionInfo() {
 }
 
 /**
+ * Navigates to a specific slide in the active presentation.
+ * This function is called from the client-side HTML.
+ * @param {string} slideId The object ID of the slide to go to.
+ */
+function _goToSlide(slideId) {
+  if (!slideId) {
+    console.error('_goToSlide called with no slideId.');
+    return;
+  }
+  try {
+    const presentation = SlidesApp.getActivePresentation();
+    const slide = presentation.getSlideById(slideId);
+    if (slide) {
+      slide.selectAsCurrentPage();
+    } else {
+      console.error(`_goToSlide: Slide with ID "${slideId}" not found.`);
+    }
+  } catch (e) {
+    console.error(`Error in _goToSlide with slideId "${slideId}": ${e.toString()}`);
+    throw e; // Re-throw to trigger failure handler on client-side
+  }
+}
+
+/**
  * Saves the user's selected files to search against for the current presentation.
  * This uses UserProperties, which are scoped to the user and the script, allowing
  * selections (as file IDs) to be remembered for each presentation.
