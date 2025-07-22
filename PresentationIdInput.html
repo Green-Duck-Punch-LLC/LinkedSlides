@@ -197,9 +197,9 @@
   <script type="text/javascript">
     // Access the OAuth token passed from the Apps Script server-side
     const OAUTH_TOKEN = '<?= oauthToken ?>';
-    // Load initial files saved for this presentation
-    const initialFiles = JSON.parse('<?= initialFilesJson ?>' || '[]');
-    let selectedFiles = new Map(initialFiles.map(f => [f.id, f]));
+    // Load IDs of initial files. Details will be fetched to ensure they are up-to-date.
+    const initialFileIds = JSON.parse('<?= initialFileIdsJson ?>' || '[]');
+    let selectedFiles = new Map();
     let picker;
 
     /**
@@ -248,7 +248,7 @@
     function onPickerApiReady() {
       // If the dialog opens and no files have ever been selected for this presentation,
       // show the picker immediately to guide the user.
-      if (selectedFiles.size === 0) {
+      if (initialFileIds.length === 0 && selectedFiles.size === 0) {
         hideMessage(); // Hide any initial loading message
         createPicker();
       }
@@ -381,6 +381,45 @@
       document.getElementById('start-search-btn').disabled = false;
     }
 
+    /**
+     * Fetches details for the initial set of file IDs and renders the table.
+     * This ensures that file names and locations are up-to-date.
+     * @param {string[]} fileIds An array of file IDs.
+     */
+    function loadInitialFileDetails(fileIds) {
+      showMessage('Loading previously selected files...', 'info');
+      document.getElementById('start-search-btn').disabled = true;
+      document.getElementById('add-files-btn').disabled = true;
+
+      google.script.run
+        .withSuccessHandler(files => {
+          // files is an array of file objects {id, name, parentName}
+          files.forEach(file => {
+            selectedFiles.set(file.id, file);
+          });
+
+          // If some files couldn't be loaded (e.g., deleted or permissions changed),
+          // inform the user.
+          if (files.length < fileIds.length) {
+              const missingCount = fileIds.length - files.length;
+              const noun = missingCount === 1 ? 'file' : 'files';
+              showMessage(`Could not load ${missingCount} ${noun}. They may have been deleted or permissions changed.`, 'error');
+          } else {
+              hideMessage();
+          }
+
+          renderSelectedFilesTable();
+          document.getElementById('add-files-btn').disabled = false;
+        })
+        .withFailureHandler(error => {
+          console.error('Failed to load initial file details:', error);
+          showMessage('Error loading previously selected files. Please add them again.', 'error');
+          document.getElementById('add-files-btn').disabled = false;
+          renderSelectedFilesTable(); // Render the empty table
+        })
+        ._getFileDetailsForIds(fileIds);
+    }
+
     function setCursor(cursor) {
       document.body.style.cursor = cursor;
     }
@@ -389,14 +428,14 @@
      * Saves the current list of selected files to the server as a JSON string.
      */
     function saveSelectedFiles() {
-      // Convert the Map values (the file objects) to an array and stringify for transport.
-      const filesToSave = JSON.stringify(Array.from(selectedFiles.values()));
+      // Convert the Map keys (the file objects) to an array and stringify for transport.
+      const filesIdsToSave = JSON.stringify(Array.from(selectedFiles.keys()));
       google.script.run
         .withFailureHandler(err => {
             console.error("Failed to save file list:", err);
             showMessage("Could not save file selection. Changes may not be remembered.", 'error');
         })
-        ._saveSelectedFiles(filesToSave);
+        ._saveSelectedFiles(filesIdsToSave);
     }
 
     /**
@@ -519,13 +558,17 @@
       document.getElementById('files-table-body').addEventListener('click', handleTableClick);
       document.getElementById('table-scroll-wrapper').addEventListener('scroll', handleScrollFade);
 
-      renderSelectedFilesTable(); // Render any pre-loaded files
+      if (initialFileIds.length > 0) {
+        loadInitialFileDetails(initialFileIds);
+      } else {
+        renderSelectedFilesTable(); // Render empty table, picker will likely open
+      }
 
       // Load the client library first. Once loaded, it will call onClientLoad,
       // which in turn loads the picker library and may open it.
       gapi.load('client', onClientLoad);
 
-      if (selectedFiles.size === 0) {
+      if (initialFileIds.length === 0) {
         // Initial message while APIs are loading, shown only if we expect to open the picker.
         showMessage('Loading Google APIs...', 'info');
       }
