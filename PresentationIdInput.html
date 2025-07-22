@@ -361,7 +361,17 @@
 
         const actionCell = row.insertCell();
         actionCell.className = 'action-col';
-        actionCell.innerHTML = `<button type="button" class="remove-btn" data-file-id="${file.id}">❌</button>`;
+
+        // Create the remove button programmatically for better security.
+        const removeButton = document.createElement('button');
+        const removeDesc = `Remove "${file.name}" from list`;
+        removeButton.type = 'button';
+        removeButton.className = 'remove-btn';
+        removeButton.dataset.fileId = file.id;
+        removeButton.setAttribute('aria-label', removeDesc);
+        removeButton.title = removeDesc;
+        removeButton.textContent = '❌';
+        actionCell.appendChild(removeButton);
       });
 
       // Use a small timeout to allow the browser to render and calculate heights correctly.
