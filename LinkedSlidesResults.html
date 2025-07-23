@@ -89,7 +89,6 @@ environment, please contact Green Duck Punch, LLC.
       display: none;
       position: absolute; /* Changed to absolute for portal pattern */
       background-color: #f9f9f9;
-      min-width: 200px; /* Adjust as needed */
       box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
       z-index: 1000; /* Increased z-index */
       padding: 10px;
@@ -593,10 +592,23 @@ environment, please contact Green Duck Punch, LLC.
             dropdownButton.setAttribute('aria-expanded', 'true');
             // Calculate position relative to the viewport
             const rect = dropdownButton.getBoundingClientRect();
-            dropdownContent.style.left = rect.left + 'px';
+            let dropdownLeft = rect.left;
             dropdownContent.style.top = (rect.bottom + 5) + 'px'; // 5px buffer below the button
             dropdownContent.style.display = 'block';
-            // Focus the first focusable item in the dropdown
+
+            // Check for overflow and adjust the left position
+            const dropdownWidth = dropdownContent.offsetWidth;
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+
+            if (dropdownLeft + dropdownWidth > viewportWidth) {
+                // Dropdown overflows, adjust position to be flush with the viewport right edge
+                dropdownLeft = viewportWidth - dropdownWidth;
+                dropdownLeft = Math.max(0, dropdownLeft); // Prevent it from overflowing the left edge
+            }
+
+            dropdownContent.style.left = dropdownLeft + 'px';
+
+           // Focus the first focusable item in the dropdown
             const firstItem = dropdownContent.querySelector('button.dropdown-item, input[type="checkbox"]');
             if (firstItem) {
                 firstItem.focus();
