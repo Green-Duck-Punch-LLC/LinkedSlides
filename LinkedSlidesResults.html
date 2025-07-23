@@ -141,6 +141,14 @@ environment, please contact Green Duck Punch, LLC.
     .dropdown-arrow {
       font-size: 1.2em; /* Make it visible */
       line-height: 1; /* Align with text */
+      padding: .25em;
+      display: inline-block;
+      border-radius: .25em;
+      /* Invert the filtered icon for contrast */
+      &:has(.filtered-icon:not(.hidden)) {
+        background-color: black;
+        color: white;
+      }
     }
     #loading-overlay {
       position: fixed; /* Cover the whole viewport */
@@ -159,7 +167,7 @@ environment, please contact Green Duck Punch, LLC.
     .filterable-icon, .filtered-icon {
       width: 1em;
       height: 1em;
-      vertical-align: text-top;
+      vertical-align: middle;
       display: inline-block;
     }
     .hidden {
