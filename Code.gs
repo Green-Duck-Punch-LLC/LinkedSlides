@@ -248,21 +248,18 @@ function _getSelectionInfo() {
  * @param {string} slideId The object ID of the slide to go to.
  */
 function _goToSlide(slideId) {
-  if (!slideId) {
-    console.error('_goToSlide called with no slideId.');
-    return;
-  }
   try {
     const presentation = SlidesApp.getActivePresentation();
     const slide = presentation.getSlideById(slideId);
     if (slide) {
       slide.selectAsCurrentPage();
     } else {
-      console.error(`_goToSlide: Slide with ID "${slideId}" not found.`);
+      console.warn(`_goToSlide: Slide with ID "${slideId}" not found.`);
+      SlidesApp.getUi().alert('The slide could not be found. It might have been deleted from the presentation.');
     }
   } catch (e) {
     console.error(`Error in _goToSlide with slideId "${slideId}": ${e.toString()}`);
-    throw e; // Re-throw to trigger failure handler on client-side
+    SlidesApp.getUi().alert('Could not navigate to the slide. Try right-clicking or Ctrl-clicking on the link and opening it in a new window or tab.');
   }
 }
 
