@@ -156,6 +156,15 @@ environment, please contact Green Duck Punch, LLC.
       color: #333;
       font-size: 1.2em;
     }
+    .filterable-icon, .filtered-icon {
+      width: 1em;
+      height: 1em;
+      vertical-align: text-top;
+      display: inline-block;
+    }
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -179,6 +188,18 @@ environment, please contact Green Duck Punch, LLC.
         </ul>
       </div>
     <? } ?>
+    <svg style="display: none">
+      <defs>
+        <symbol id="filterable-icon" viewBox="0 0 12.7 12.7" stroke="currentColor" fill="currentColor">
+          <path d="m0.794 1.68h11.1" style="paint-order:stroke fill markers"/>
+          <path d="m3.18 6.35h6.35" style="paint-order:stroke fill markers"/>
+          <path d="m5.69 11h1.32" style="paint-order:stroke fill markers"/>
+        </symbol>
+        <symbol id="filtered-icon" viewBox="0 0 12.7 12.7" stroke="currentColor" fill="currentColor">
+          <path d="m0.0346 0.0692 4.77 4.77v7.83h3.09v-7.82l4.77-4.77h-6.31v4.35h-5.17e-4v-4.35h-6.32z" stroke-linejoin="round" stroke-width=".974" style="paint-order:stroke fill markers"/>
+        </symbol>
+      </defs>      
+    </svg>
 
     <table>
       <thead>
@@ -190,7 +211,7 @@ environment, please contact Green Duck Punch, LLC.
           <th scope="col" id="th-sourceSlidePageNumber">
             <div class="dropdown">
                 <button type="button" class="dropdown-button" data-column="sourceSlidePageNumber" data-target="filter-sourceSlidePageNumber">
-                    <span>Slide</span> <span class="dropdown-arrow">▼</span>
+                    <span>Slide</span> <span class="dropdown-arrow"><svg class="filterable-icon"><use xlink:href="#filterable-icon"></use></svg><svg class="filtered-icon hidden"><use xlink:href="#filtered-icon"></use></svg></span>
                 </button>
                 <!-- Dropdown content will be moved here by JS -->
             </div>
@@ -198,7 +219,7 @@ environment, please contact Green Duck Punch, LLC.
           <th scope="col" id="th-targetPresentationName">
              <div class="dropdown">
                 <button type="button" class="dropdown-button" data-column="targetPresentationName" data-target="filter-targetPresentationName">
-                    <span>Presentation</span> <span class="dropdown-arrow">▼</span>
+                    <span>Presentation</span> <span class="dropdown-arrow"><svg class="filterable-icon"><use xlink:href="#filterable-icon"></use></svg><svg class="filtered-icon hidden"><use xlink:href="#filtered-icon"></use></svg></span>
                 </button>
                 <!-- Dropdown content will be moved here by JS -->
             </div>
@@ -206,7 +227,7 @@ environment, please contact Green Duck Punch, LLC.
           <th scope="col" id="th-targetSlidePageNumber">
             <div class="dropdown">
                 <button type="button" class="dropdown-button" data-column="targetSlidePageNumber" data-target="filter-targetSlidePageNumber">
-                    <span>Slide</span> <span class="dropdown-arrow">▼</span>
+                    <span>Slide</span> <span class="dropdown-arrow"><svg class="filterable-icon"><use xlink:href="#filterable-icon"></use></svg><svg class="filtered-icon hidden"><use xlink:href="#filtered-icon"></use></svg></span>
                 </button>
                 <!-- Dropdown content will be moved here by JS -->
             </div>
@@ -526,6 +547,7 @@ environment, please contact Green Duck Punch, LLC.
         if (masterCheckbox.checked) {
             activeFilters[columnKey].clear(); // Clear existing filters
             checkboxes.forEach(cb => {
+                cb.disabled = false;
                 cb.checked = true;
                 activeFilters[columnKey].add(cb.value);
             });
@@ -603,11 +625,28 @@ environment, please contact Green Duck Punch, LLC.
               // Update the state of the master "Select All" checkbox
               const selectAllCheckbox = dropdownContent.querySelector('.select-all-toggle');
               const allColumnCheckboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
-              if (selectAllCheckbox) {
-                  // If the number of checked boxes (excluding master) matches total, it's "all selected"
-                  selectAllCheckbox.checked = (activeFilters[key].size === allColumnCheckboxes.length);
-              }
+              if (!selectAllCheckbox) return;
+              
+              // If the number of checked boxes (excluding master) matches total, it's "all selected"
+              selectAllCheckbox.checked = (activeFilters[key].size === allColumnCheckboxes.length);
+
+              // Update the filterable/filtered icon visibility
+              const dropdownButton = document.querySelector(`.dropdown-button[data-column="${key}"]`);
+              if (!dropdownButton) return;
+
+              const filterableIcon = dropdownButton.querySelector('.filterable-icon');
+              const filteredIcon = dropdownButton.querySelector('.filtered-icon');
+
+              if (!filterableIcon || !filteredIcon) return;
+
+              if (selectAllCheckbox.checked) {
+                  filterableIcon.classList.remove('hidden');
+                  filteredIcon.classList.add('hidden');
+              } else {
+                  filterableIcon.classList.add('hidden');
+                  filteredIcon.classList.remove('hidden');
             }
+          }
         });
 
         // Filter data based on active filters
