@@ -243,6 +243,18 @@ environment, please contact Green Duck Punch, LLC.
     const dropdownContentCache = {};
 
     /**
+     * Navigates to a specific slide in the presentation.
+     * @param {string} slideId The object ID of the slide to navigate to.
+     */
+    function goToSlide(slideId) {
+      google.script.run
+        .withFailureHandler(err => {
+          console.error('Failed to navigate to slide:', err);
+        })
+        ._goToSlide(slideId);
+    }
+
+    /**
      * Renders the table body based on the current tableData.
      */
     function renderTable() {
@@ -253,8 +265,10 @@ environment, please contact Green Duck Punch, LLC.
             const row = tbody.insertRow();
             // Source Slide # (with link to source slide if applicable)
             const sourceSlideCell = row.insertCell();
-            if (rowData.sourceSlideId){ // Check if sourceSlideId exists for linking
-                sourceSlideCell.innerHTML = "<a href=\"https://docs.google.com/presentation/d/" + activePresentationId + "/edit#slide=id." + rowData.sourceSlideId + "\" target=\"_blank\">" + rowData.sourceSlidePageNumber + "</a>";
+            if (rowData.sourceSlideId) { // Check if sourceSlideId exists for linking
+                const slideUrl = "https://docs.google.com/presentation/d/" + activePresentationId + "/edit#slide=id." + rowData.sourceSlideId;
+                // The href is for right-click > open in new tab functionality, while onclick handles the in-app navigation.
+                sourceSlideCell.innerHTML = `<a href="${slideUrl}" onclick="goToSlide('${rowData.sourceSlideId}'); return false;" target="_blank">${rowData.sourceSlidePageNumber}</a>`;
             } else {
                 sourceSlideCell.textContent = rowData.sourceSlidePageNumber; // Just display number if no ID
             }
