@@ -372,45 +372,38 @@ environment, please contact Green Duck Punch, LLC.
     }
 
     /**
-     * Applies a pre-defined filter scope to the source slide column.
-     * This function now handles dynamic fetching of selection.
-     * @param {string} scope The filter scope ('all', 'selected').
+     * Filters the source slides to only include the slides that are selected in the presentation.
      */
-    function applySourceFilter(scope) {
+    function filterSourceToSelected() {
         const columnKey = 'sourceSlidePageNumber';
         const dropdownContent = dropdownContentCache[columnKey];
         const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
         const loadingOverlay = document.getElementById('loading-overlay');
 
-        if (scope === 'all') {
-            checkboxes.forEach(cb => { cb.checked = true; });
-            filterTable();
-        } else { // 'selected'
-            // Show loading overlay to indicate work and block UI
-            if (loadingOverlay) loadingOverlay.style.display = 'flex';
+        // Show loading overlay to indicate work and block UI
+        if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
-            google.script.run
-                .withSuccessHandler(selectionInfo => {
-                    if (loadingOverlay) loadingOverlay.style.display = 'none';
+        google.script.run
+            .withSuccessHandler(selectionInfo => {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
 
-                    const slideIdsToMatch = new Set(selectionInfo.selectedSlideIds || []);
-                    const sourcePageNumbersToSelect = new Set();
-                    originalTableData.forEach(row => {
-                        if (slideIdsToMatch.has(row.sourceSlideId)) {
-                            sourcePageNumbersToSelect.add(String(row.sourceSlidePageNumber));
-                        }
-                    });
+                const slideIdsToMatch = new Set(selectionInfo.selectedSlideIds || []);
+                const sourcePageNumbersToSelect = new Set();
+                originalTableData.forEach(row => {
+                    if (slideIdsToMatch.has(row.sourceSlideId)) {
+                        sourcePageNumbersToSelect.add(String(row.sourceSlidePageNumber));
+                    }
+                });
 
-                    checkboxes.forEach(cb => { cb.checked = sourcePageNumbersToSelect.has(cb.value); });
-                    filterTable();
-                })
-                .withFailureHandler(err => {
-                    if (loadingOverlay) loadingOverlay.style.display = 'none';
-                    console.error('Failed to get selection info:', err);
-                    alert('Could not update selection from the presentation. Please try again.');
-                })
-                ._getSelectionInfo();
-        }
+                checkboxes.forEach(cb => { cb.checked = sourcePageNumbersToSelect.has(cb.value); });
+                filterTable();
+            })
+            .withFailureHandler(err => {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+                console.error('Failed to get selection info:', err);
+                alert('Could not update selection from the presentation. Please try again.');
+            })
+            ._getSelectionInfo();
     }
 
     /**
@@ -436,21 +429,20 @@ environment, please contact Green Duck Punch, LLC.
             dropdownContent.appendChild(innerDiv);
             
             if (key === 'sourceSlidePageNumber') {
-                const createFilterLink = (text, scope) => {
+                const createFilterLink = (text) => {
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'dropdown-item';
                     button.textContent = text;
                     button.onclick = (e) => {
                         e.preventDefault();
-                        applySourceFilter(scope);
+                        filterSourceToSelected();
                         closeDropdownAndFocusButton(key);
                     };
                     innerDiv.appendChild(button);
                 };
                 
-                createFilterLink('Show All', 'all');
-                createFilterLink('Selected Slides Only', 'selected');
+                createFilterLink('Select current slide(s)');
 
                 const hr = document.createElement('hr');
                 hr.className = 'dropdown-divider';
@@ -506,7 +498,7 @@ environment, please contact Green Duck Punch, LLC.
             
             // Add the (De)select All checkbox at the very top
             const selectAllLabel = document.createElement('label');
-            selectAllLabel.innerHTML = '<input type="checkbox" class="select-all-toggle" data-column="' + key + '"> (De)select All';
+            selectAllLabel.innerHTML = '<input type="checkbox" class="select-all-toggle" data-column="' + key + '"> All';
             innerDiv.appendChild(selectAllLabel);
             
             const selectAllCheckbox = selectAllLabel.querySelector('input');
