@@ -91,11 +91,22 @@ environment, please contact Green Duck Punch, LLC.
       background-color: #f9f9f9;
       box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
       z-index: 1000; /* Increased z-index */
+    }
+    .dropdown-content > div {
       padding: 10px;
       border-radius: 0.25rem;
       max-height: 250px; /* Scrollable if many options, adjusted for ~10 items */
       overflow-y: auto;
       text-align: left; /* Ensure checkboxes align left */
+      /* Mask to indicate scrolling */
+      mask-image: linear-gradient(to bottom, black 0%, black 90%, transparent 100%);
+    }
+
+    .dropdown-content.no-mask {
+       /* Remove the mask when scrolling is not needed */
+       mask-image: none;
+       -webkit-mask-image: none; /* For older browsers */
+
     }
     .dropdown-content label {
       display: block;
@@ -361,45 +372,38 @@ environment, please contact Green Duck Punch, LLC.
     }
 
     /**
-     * Applies a pre-defined filter scope to the source slide column.
-     * This function now handles dynamic fetching of selection.
-     * @param {string} scope The filter scope ('all', 'selected').
+     * Filters the source slides to only include the slides that are selected in the presentation.
      */
-    function applySourceFilter(scope) {
+    function filterSourceToSelected() {
         const columnKey = 'sourceSlidePageNumber';
         const dropdownContent = dropdownContentCache[columnKey];
         const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
         const loadingOverlay = document.getElementById('loading-overlay');
 
-        if (scope === 'all') {
-            checkboxes.forEach(cb => { cb.checked = true; });
-            filterTable();
-        } else { // 'selected'
-            // Show loading overlay to indicate work and block UI
-            if (loadingOverlay) loadingOverlay.style.display = 'flex';
+        // Show loading overlay to indicate work and block UI
+        if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
-            google.script.run
-                .withSuccessHandler(selectionInfo => {
-                    if (loadingOverlay) loadingOverlay.style.display = 'none';
+        google.script.run
+            .withSuccessHandler(selectionInfo => {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
 
-                    const slideIdsToMatch = new Set(selectionInfo.selectedSlideIds || []);
-                    const sourcePageNumbersToSelect = new Set();
-                    originalTableData.forEach(row => {
-                        if (slideIdsToMatch.has(row.sourceSlideId)) {
-                            sourcePageNumbersToSelect.add(String(row.sourceSlidePageNumber));
-                        }
-                    });
+                const slideIdsToMatch = new Set(selectionInfo.selectedSlideIds || []);
+                const sourcePageNumbersToSelect = new Set();
+                originalTableData.forEach(row => {
+                    if (slideIdsToMatch.has(row.sourceSlideId)) {
+                        sourcePageNumbersToSelect.add(String(row.sourceSlidePageNumber));
+                    }
+                });
 
-                    checkboxes.forEach(cb => { cb.checked = sourcePageNumbersToSelect.has(cb.value); });
-                    filterTable();
-                })
-                .withFailureHandler(err => {
-                    if (loadingOverlay) loadingOverlay.style.display = 'none';
-                    console.error('Failed to get selection info:', err);
-                    alert('Could not update selection from the presentation. Please try again.');
-                })
-                ._getSelectionInfo();
-        }
+                checkboxes.forEach(cb => { cb.checked = sourcePageNumbersToSelect.has(cb.value); });
+                filterTable();
+            })
+            .withFailureHandler(err => {
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+                console.error('Failed to get selection info:', err);
+                alert('Could not update selection from the presentation. Please try again.');
+            })
+            ._getSelectionInfo();
     }
 
     /**
@@ -421,27 +425,28 @@ environment, please contact Green Duck Punch, LLC.
             dropdownContentCache[key] = dropdownContent;
 
             dropdownContent.innerHTML = ''; // Clear previous options
-
+            const innerDiv = document.createElement('div');
+            dropdownContent.appendChild(innerDiv);
+            
             if (key === 'sourceSlidePageNumber') {
-                const createFilterLink = (text, scope) => {
+                const createFilterLink = (text) => {
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'dropdown-item';
                     button.textContent = text;
                     button.onclick = (e) => {
                         e.preventDefault();
-                        applySourceFilter(scope);
+                        filterSourceToSelected();
                         closeDropdownAndFocusButton(key);
                     };
-                    dropdownContent.appendChild(button);
+                    innerDiv.appendChild(button);
                 };
                 
-                createFilterLink('Show All', 'all');
-                createFilterLink('Selected Slides Only', 'selected');
+                createFilterLink('Select current slide(s)');
 
                 const hr = document.createElement('hr');
                 hr.className = 'dropdown-divider';
-                dropdownContent.appendChild(hr);
+                innerDiv.appendChild(hr);
             }
 
             // Add Sort Actions
@@ -453,7 +458,7 @@ environment, please contact Green Duck Punch, LLC.
                 sortTable(key, 'asc');
                 closeDropdownAndFocusButton(key);
             };
-            dropdownContent.appendChild(sortAscBtn);
+            innerDiv.appendChild(sortAscBtn);
 
             const sortDescBtn = document.createElement('button');
             sortDescBtn.type = 'button';
@@ -463,11 +468,11 @@ environment, please contact Green Duck Punch, LLC.
                 sortTable(key, 'desc');
                 closeDropdownAndFocusButton(key);
             };
-            dropdownContent.appendChild(sortDescBtn);
+            innerDiv.appendChild(sortDescBtn);
 
             const hr = document.createElement('hr');
             hr.className = 'dropdown-divider';
-            dropdownContent.appendChild(hr);
+            innerDiv.appendChild(hr);
 
             const uniqueValues = new Set();
             originalTableData.forEach(row => {
@@ -491,10 +496,10 @@ environment, please contact Green Duck Punch, LLC.
                 return String(valA).localeCompare(String(valB));
             });
             
-                        // Add the (De)select All checkbox at the very top
+            // Add the (De)select All checkbox at the very top
             const selectAllLabel = document.createElement('label');
-            selectAllLabel.innerHTML = '<input type="checkbox" class="select-all-toggle" data-column="' + key + '"> (De)select All';
-            dropdownContent.appendChild(selectAllLabel);
+            selectAllLabel.innerHTML = '<input type="checkbox" class="select-all-toggle" data-column="' + key + '"> All';
+            innerDiv.appendChild(selectAllLabel);
             
             const selectAllCheckbox = selectAllLabel.querySelector('input');
             selectAllCheckbox.onchange = function(event) {
@@ -512,7 +517,7 @@ environment, please contact Green Duck Punch, LLC.
 
                 const label = document.createElement('label');
                 label.innerHTML = "<input type=\"checkbox\" id=\"" + checkboxId + "\" data-column=\"" + key + "\" value=\"" + value + "\" onchange=\"filterTable()\"> " + displayValue;
-                dropdownContent.appendChild(label);
+                innerDiv.appendChild(label);
 
                 const checkbox = label.querySelector('input');
                 // All are checked by default on initial population
@@ -614,6 +619,26 @@ environment, please contact Green Duck Punch, LLC.
                 firstItem.focus();
             }
         }
+
+       // Function to toggle mask based on scroll position
+        const toggleMask = () => {
+            // Check if the user has scrolled to the bottom
+            const isAtBottom = dropdownContent.scrollHeight - dropdownContent.scrollTop - dropdownContent.clientHeight < 1;
+
+            // Toggle the 'no-mask' class based on whether scrolling is needed and if we're at the bottom
+            if (isAtBottom) {
+                dropdownContent.classList.add('no-mask');
+            } else {
+                dropdownContent.classList.remove('no-mask');
+            }
+        };
+
+        // Call toggleMask initially and on scroll
+        setTimeout(() => {
+            toggleMask();
+            // Listen for scroll events to update the mask
+            dropdownContent.addEventListener('scroll', toggleMask);
+        }, 0);
     }
 
     /**
