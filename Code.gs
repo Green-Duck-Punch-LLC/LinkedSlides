@@ -315,25 +315,46 @@ function _getFileDetailsForIds(fileIds) {
     return [];
   }
 
-  const fileDetails = [];
-  fileIds.forEach(id => {
-    try {
-      // Note: This requires the Drive API v2 Advanced Service.
-      // Fetch file name and parent IDs in one call.
-      const file = Drive.Files.get(id, { fields: 'id,title,parents', supportsAllDrives: true });
-      let parentName = 'My Drive'; // Default parent name
+  const batchPath = "batch/drive/v3";
+  const driveApiBaseUrl = "https://www.googleapis.com/drive/v3";
+  const fileRequests = [];
 
-      if (file.parents && file.parents.length > 0) {
-        // A file can have multiple parents; we'll use the first one.
-        const parentId = file.parents[0].id;
-        const parentFolder = Drive.Files.get(parentId, { fields: 'title', supportsAllDrives: true }); // 'title' is the field for name in v2
-        parentName = parentFolder.title;
-      }
-      fileDetails.push({ id: file.id, name: file.title, parentName: parentName });
-    } catch (e) {
-      // If file not found or other error, omit it from the results.
-      console.error(`Could not get details for file ID ${id}: ${e.toString()}`);
-    }
+  fileIds.forEach(id => {
+    fileRequests.push({
+      method: "GET",
+      endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name,parents`
+    });
+  });
+  const fileResponses = EDo({
+    requests: fileRequests,
+    batchPath: batchPath,
+  });
+  const parentNameMap = {};
+  fileResponses.forEach(file => {
+    if (file.parents && file.parents.length > 0)
+      parentNameMap[file.parents[0]]= 'My Drive';
+  });
+  const parentRequests = [];
+  Object.keys(parentNameMap).forEach(id => {
+    parentRequests.push({
+      method: "GET",
+      endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name`
+    });
+  });
+  const parentResponses = EDo({
+    requests: parentRequests,
+    batchPath: batchPath,
+  });
+  parentResponses.forEach(parent => {
+    parentNameMap[parent.id] = parent.name;
+  });
+  const fileDetails = [];
+  fileResponses.forEach(file => {
+    fileDetails.push({
+      id: file.id,
+      name: file.name,
+      parentName: (file.parents && file.parents.length > 0) ? parentNameMap[file.parents[0]] : 'My Drive'
+    });
   });
   return fileDetails;
 }
