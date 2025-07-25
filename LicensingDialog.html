@@ -80,7 +80,7 @@ environment, please contact Green Duck Punch, LLC.
     </div>
     </div>
     <div id="thank-you-container">
-        <p><b>Thank you for subscribing! Please close this window and reopen the extension to start using it.</b></p>
+        <p><b>Thank you for subscribing!</b></p><button onclick="findLinkedSlides()" class="action">Find Linked Slides</button>
     </div>
     <script>
         const termsCheckbox = document.getElementById('terms-checkbox');
@@ -93,6 +93,11 @@ environment, please contact Green Duck Punch, LLC.
         termsCheckbox.addEventListener('change', function () {
             purchaseButton.disabled = !this.checked;
         });
+        
+        function findLinkedSlides() {
+            google.script.run.findLinkedSlides();
+            google.script.host.close();
+        }
 
         function handlePaddleEvent(ev) {
             switch (ev.name) {
