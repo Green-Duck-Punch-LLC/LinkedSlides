@@ -529,17 +529,9 @@
 
       const presentationIds = Array.from(selectedFiles.keys()).join(',');
 
-      // Show a loading indicator and disable buttons
-      setCursor('wait');
-      showMessage('Searching for linked slides...', 'info');
-      document.getElementById('add-files-btn').disabled = true;
-      document.getElementById('start-search-btn').disabled = true;
-
       google.script.run
-        .withSuccessHandler(() => {
-          setCursor('auto');
-          showMessage('Search complete!', 'info');
-          google.script.host.close();
+        .withSuccessHandler(retVal => {
+          console.log("_performLinkedSlideSearch returned:", retVal);
         })
         .withFailureHandler(error => {
           showMessage('Error: ' + error.message, 'error');
@@ -549,7 +541,8 @@
           document.getElementById('start-search-btn').disabled = false;
         })
         ._performLinkedSlideSearch(presentationIds);
-    }
+        google.script.host.close();
+      }
 
     // Initial setup on DOM content loaded
     document.addEventListener('DOMContentLoaded', () => {

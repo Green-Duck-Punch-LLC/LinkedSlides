@@ -109,13 +109,33 @@ function findLinkedSlides() {
 }
 
 /**
- * Performs the search for linked slides based on user input.
+ * Performs the search for linked slides based on user input and updates the sidebar.
  * This function is called by the HTML dialog via google.script.run.
  *
  * @param {string} presentationIdsString A comma-separated string of Google Slides presentation IDs.
  */
 function _performLinkedSlideSearch(presentationIdsString) {
   const ui = SlidesApp.getUi();
+  try {
+    const progressHtml = HtmlService.createHtmlOutput("Searching for linked slides...").setTitle('Linked Slides Search');
+    ui.showSidebar(progressHtml);
+    const resultsHtml = generateSearchResults_(presentationIdsString);
+    ui.showSidebar(resultsHtml);
+  } catch (e) {
+    console.error(`Error in _performLinkedSlideSearch: ${e.toString()}`);
+    ui.showSidebar(HtmlService.createHtmlOutput("Search for linked slides failed. Please try again. If the problem persists, please contact support@greenduckpunch.com.").setTitle('Linked Slides Error'));
+  }
+}
+
+/**
+ * Searches for slides in the specified presentations that are linked copies of the slides in the
+ * active presentation and returns a webpage of search results.
+ * This function is called internally by _performLinkedSlidesSearch()
+ *
+ * @param {string} presentationIdsString A comma-separated string of Google Slides presentation IDs.
+ * @returns {HtmlOutput} The search results suitable for display as a sidebar.
+ */
+function generateSearchResults_(presentationIdsString) {
   const activePresentation = SlidesApp.getActivePresentation();
   const activePresentationId = activePresentation.getId();
 
@@ -137,11 +157,6 @@ function _performLinkedSlideSearch(presentationIdsString) {
   const targetPresentationIds = presentationIdsString.split(',')
                                   .map(id => id.trim())
                                   .filter(id => id.length > 0);
-
-  if (targetPresentationIds.length === 0) {
-    ui.alert('No IDs Entered', 'Please enter at least one presentation ID to search.', ui.ButtonSet.OK);
-    return;
-  }
 
   const errors = []; // Stores errors encountered while accessing presentations
 
@@ -212,8 +227,7 @@ function _performLinkedSlideSearch(presentationIdsString) {
   // Evaluate the template and display the sidebar
   const resultHtmlOutput = resultTemplate.evaluate()
       .setTitle(dialogTitle);
-
-  ui.showSidebar(resultHtmlOutput);
+  return resultHtmlOutput;
 }
 
 /**
