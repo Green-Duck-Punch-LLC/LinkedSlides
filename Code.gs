@@ -117,10 +117,22 @@ function findLinkedSlides() {
 function _performLinkedSlideSearch(presentationIdsString) {
   const ui = SlidesApp.getUi();
   try {
-    const progressHtml = HtmlService.createHtmlOutput("Searching for linked slides...").setTitle('Linked Slides Search');
-    ui.showSidebar(progressHtml);
-    const resultsHtml = generateSearchResults_(presentationIdsString);
-    ui.showSidebar(resultsHtml);
+    const userCache = CacheService.getUserCache();
+    const presentationId = SlidesApp.getActivePresentation().getId();
+    const isSearchingKey = `is_searching_${presentationId}`;
+    if (userCache.get(isSearchingKey)) {
+      ui.alert("A search is already in progress. Please wait for it to finish.");
+      return;
+    }
+    try {
+      userCache.put(isSearchingKey, 'true', 5*60); //Prevent overlapping searches for 5 minutes
+      const progressHtml = HtmlService.createHtmlOutput("Searching for linked slides...").setTitle('Linked Slides Search');
+      ui.showSidebar(progressHtml);
+      const resultsHtml = generateSearchResults_(presentationIdsString);
+      ui.showSidebar(resultsHtml);  
+    } finally {
+      userCache.remove(isSearchingKey);
+    }
   } catch (e) {
     console.error(`Error in _performLinkedSlideSearch: ${e.toString()}`);
     ui.showSidebar(HtmlService.createHtmlOutput("Search for linked slides failed. Please try again. If the problem persists, please contact support@greenduckpunch.com.").setTitle('Linked Slides Error'));
