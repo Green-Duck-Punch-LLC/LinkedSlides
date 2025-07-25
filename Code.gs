@@ -116,6 +116,9 @@ function findLinkedSlides() {
  */
 function _performLinkedSlideSearch(presentationIdsString) {
   const ui = SlidesApp.getUi();
+  const html = HtmlService.createHtmlOutput("Searching for linked slides...").setTitle('Linked Slides Search');
+  ui.showSidebar(html);
+
   const activePresentation = SlidesApp.getActivePresentation();
   const activePresentationId = activePresentation.getId();
 
