@@ -188,7 +188,10 @@ environment, please contact Green Duck Punch, LLC.
 <body>
   <div id="loading-overlay" style="display: none;"><span>Determining selection...</span></div>
   <div id="container">
-      <p class="gray">
+    <p>
+    <button id="find-linked-slides" onclick="findLinkedSlides()" class="action">Start new search</button>
+    </p>
+    <p class="gray">
     <? if (anyLinkedResults){ ?>
       The following slide(s) were involved in linking relationships
     <? } else if (displayRowsJson.length > 2 && !anyLinkedResults) { // Check if displayRowsJson is not just '[]' ?>
@@ -722,6 +725,20 @@ environment, please contact Green Duck Punch, LLC.
             });
         }
     };
+
+    function findLinkedSlides() {
+        const newSearchButton = document.getElementById('find-linked-slides');
+        newSearchButton.disabled = true;
+        google.script.run
+            .withSuccessHandler(err => {
+              newSearchButton.disabled = false;
+            })
+            .withFailureHandler(err => {
+              newSearchButton.disabled = false;
+              console.error('findLinkedSlides() failed:', err);
+            })
+            .findLinkedSlides();
+    }
 
     // Initial setup
     document.addEventListener('DOMContentLoaded', (event) => {
