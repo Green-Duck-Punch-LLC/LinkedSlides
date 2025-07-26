@@ -315,58 +315,63 @@ function _getFileDetailsForIds(fileIds) {
     return [];
   }
 
-  const fileDetails = [];
-  fileIds.forEach(id => {
-    try {
-      // Note: This requires the Drive API v2 Advanced Service.
-      // Fetch file name and parent IDs in one call.
-      const file = Drive.Files.get(id, { fields: 'id,title,parents', supportsAllDrives: true });
-      let parentName = 'My Drive'; // Default parent name
+  const batchPath = "batch/drive/v3";
+  const driveApiBaseUrl = "https://www.googleapis.com/drive/v3";
+  const fileRequests = [];
 
-      if (file.parents && file.parents.length > 0) {
-        // A file can have multiple parents; we'll use the first one.
-        const parentId = file.parents[0].id;
-        const parentFolder = Drive.Files.get(parentId, { fields: 'title', supportsAllDrives: true }); // 'title' is the field for name in v2
-        parentName = parentFolder.title;
-      }
-      fileDetails.push({ id: file.id, name: file.title, parentName: parentName });
-    } catch (e) {
-      // If file not found or other error, omit it from the results.
-      console.error(`Could not get details for file ID ${id}: ${e.toString()}`);
+  fileIds.forEach(id => {
+    fileRequests.push({
+      method: "GET",
+      endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name,parents,driveId`
+    });
+  });
+  const fileResponses = EDo({
+    requests: fileRequests,
+    batchPath: batchPath,
+  });
+  const parentNameMap = {};
+  fileResponses.forEach(file => {
+    if (file.parents && file.parents.length > 0 && file.parents[0] != file.driveId)
+      parentNameMap[file.parents[0]]= 'Unknown Folder';
+    else if (file.driveId) {
+      parentNameMap[file.driveId] = 'Unknown Shared Drive'
     }
+  });
+  const parentRequests = [];
+  Object.keys(parentNameMap).forEach(id => {
+    if (parentNameMap[id] === 'Unknown Shared Drive') {
+      parentRequests.push({
+        method: "GET",
+        endpoint: `${driveApiBaseUrl}/drives/${id}?fields=id,name`
+      });  
+    } else {
+      parentRequests.push({
+        method: "GET",
+        endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name`
+      });  
+    }
+  });
+  const parentResponses = EDo({
+    requests: parentRequests,
+    batchPath: batchPath,
+  });
+  parentResponses.forEach(parent => {
+    parentNameMap[parent.id] = parent.name;
+  });
+  const fileDetails = [];
+  fileResponses.forEach(file => {
+    const detail = {
+      id: file.id,
+      name: file.name
+    };
+    if (file.parents && file.parents.length > 0) {
+      detail.parentName = parentNameMap[file.parents[0]];
+    } else if (file.driveId) {
+      detail.parentName = parentNameMap[file.driveId];
+    } else {
+      detail.parentName = 'My Drive';
+    }
+    fileDetails.push(detail);
   });
   return fileDetails;
-}
-
-/**
- * Gets the parent folder name for a given set of file IDs.
- * @param {string} fileIds A comma-separated string of file IDs.
- * @return {Object} A map of fileId -> parentName.
- */
-function _getFileParents(fileIds) {
-  if (!fileIds || fileIds.length === 0) {
-    return {};
-  }
-  const parentInfo = {};
-  const ids = fileIds.split(',');
-  ids.forEach(id => {
-    try {
-      // Note: This requires the Drive API v2 Advanced Service.
-      const file = Drive.Files.get(id, { fields: 'parents', supportsAllDrives: true });
-      if (file.parents && file.parents.length > 0) {
-        // A file can have multiple parents; we'll use the first one.
-        const parentId = file.parents[0].id;
-        const parentFolder = Drive.Files.get(parentId, { fields: 'title', supportsAllDrives: true }); // 'title' is the field for name in v2
-        parentInfo[id] = parentFolder.title;
-      } else {
-        // File is in the root of My Drive.
-        parentInfo[id] = 'My Drive';
-      }
-    } catch (e) {
-      // If file not found or other error, default gracefully.
-      console.error(`Could not get parent for file ID ${id}: ${e.toString()}`);
-      parentInfo[id] = 'Unknown';
-    }
-  });
-  return parentInfo;
 }

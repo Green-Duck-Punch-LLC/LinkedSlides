@@ -491,10 +491,10 @@
 
           const newFileIds = newDocs.map(doc => doc.id);
           google.script.run
-            .withSuccessHandler(parentInfoMap => {
-              Object.keys(parentInfoMap).forEach(fileId => {
-                if (selectedFiles.has(fileId)) {
-                  selectedFiles.get(fileId).parentName = parentInfoMap[fileId];
+            .withSuccessHandler(fileDetails => {
+              fileDetails.forEach(file => {
+                if (selectedFiles.has(file.id)) {
+                  selectedFiles.get(file.id).parentName = file.parentName;
                 }
               });
               renderSelectedFilesTable();
@@ -507,7 +507,7 @@
               renderSelectedFilesTable();
               saveSelectedFiles();
             })
-            ._getFileParents(newFileIds.join(','));
+            ._getFileDetailsForIds(newFileIds);
         }
       } else if (data.action === google.picker.Action.CANCEL) {
         // If the user cancels and no files have been selected yet, close the dialog.
