@@ -322,7 +322,7 @@ function _getFileDetailsForIds(fileIds) {
   fileIds.forEach(id => {
     fileRequests.push({
       method: "GET",
-      endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name,parents`
+      endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name,parents,driveId`
     });
   });
   const fileResponses = EDo({
@@ -331,15 +331,25 @@ function _getFileDetailsForIds(fileIds) {
   });
   const parentNameMap = {};
   fileResponses.forEach(file => {
-    if (file.parents && file.parents.length > 0)
-      parentNameMap[file.parents[0]]= 'My Drive';
+    if (file.parents && file.parents.length > 0 && file.parents[0] != file.driveId)
+      parentNameMap[file.parents[0]]= 'Unknown Folder';
+    else if (file.driveId) {
+      parentNameMap[file.driveId] = 'Unknown Shared Drive'
+    }
   });
   const parentRequests = [];
   Object.keys(parentNameMap).forEach(id => {
-    parentRequests.push({
-      method: "GET",
-      endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name`
-    });
+    if (parentNameMap[id] === 'Unknown Shared Drive') {
+      parentRequests.push({
+        method: "GET",
+        endpoint: `${driveApiBaseUrl}/drives/${id}?fields=id,name`
+      });  
+    } else {
+      parentRequests.push({
+        method: "GET",
+        endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name`
+      });  
+    }
   });
   const parentResponses = EDo({
     requests: parentRequests,
@@ -350,11 +360,18 @@ function _getFileDetailsForIds(fileIds) {
   });
   const fileDetails = [];
   fileResponses.forEach(file => {
-    fileDetails.push({
+    const detail = {
       id: file.id,
-      name: file.name,
-      parentName: (file.parents && file.parents.length > 0) ? parentNameMap[file.parents[0]] : 'My Drive'
-    });
+      name: file.name
+    };
+    if (file.parents && file.parents.length > 0) {
+      detail.parentName = parentNameMap[file.parents[0]];
+    } else if (file.driveId) {
+      detail.parentName = parentNameMap[file.driveId];
+    } else {
+      detail.parentName = 'My Drive';
+    }
+    fileDetails.push(detail);
   });
   return fileDetails;
 }
