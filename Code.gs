@@ -73,7 +73,7 @@ function launchLinkedSlides() {
  * It also passes the OAuth token to the HTML for Picker API authentication.
  */
 function findLinkedSlides() {
-    // Enforce licensing. If the user is not licensed, this function will
+  // Enforce licensing. If the user is not licensed, this function will
   // show a dialog and return false, stopping further execution.
   if (typeof _enforceLicense !== 'undefined' && !_enforceLicense()) {
     return;
