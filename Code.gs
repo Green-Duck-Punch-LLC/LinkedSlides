@@ -73,7 +73,7 @@ function launchLinkedSlides() {
  * It also passes the OAuth token to the HTML for Picker API authentication.
  */
 function findLinkedSlides() {
-    // Enforce licensing. If the user is not licensed, this function will
+  // Enforce licensing. If the user is not licensed, this function will
   // show a dialog and return false, stopping further execution.
   if (typeof _enforceLicense !== 'undefined' && !_enforceLicense()) {
     return;
@@ -116,6 +116,8 @@ function findLinkedSlides() {
  */
 function _performLinkedSlideSearch(presentationIdsString) {
   const ui = SlidesApp.getUi();
+  const progressHtml = HtmlService.createHtmlOutput("Searching for linked slides...").setTitle('Linked Slides Search');
+  ui.showSidebar(progressHtml);
   try {
     const userCache = CacheService.getUserCache();
     const presentationId = SlidesApp.getActivePresentation().getId();
@@ -126,8 +128,6 @@ function _performLinkedSlideSearch(presentationIdsString) {
     }
     try {
       userCache.put(isSearchingKey, 'true', 5*60); //Prevent overlapping searches for 5 minutes
-      const progressHtml = HtmlService.createHtmlOutput("Searching for linked slides...").setTitle('Linked Slides Search');
-      ui.showSidebar(progressHtml);
       const resultsHtml = generateSearchResults_(presentationIdsString);
       ui.showSidebar(resultsHtml);  
     } finally {

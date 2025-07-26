@@ -37,43 +37,43 @@
  */
 function _getLicensingConfig() {
   const properties = PropertiesService.getScriptProperties();
+  const propsObj = properties.getProperties()
   const config = {
     // --- Paddle API Configuration ---
     // Get these from your Paddle dashboard.
-    PADDLE_API_KEY: properties.getProperty('PADDLE_API_KEY'),
-    PADDLE_API_BASE_URL: (properties.getProperty('PADDLE_API_BASE_URL') || 'https://api.paddle.com').replace(/\/$/, ''),
-    PADDLE_FRONTEND_TOKEN: properties.getProperty('PADDLE_FRONTEND_TOKEN'),
-    PADDLE_ENVIRONMENT: properties.getProperty('PADDLE_ENVIRONMENT') || 'production',
+    PADDLE_API_KEY: propsObj['PADDLE_API_KEY'],
+    PADDLE_API_BASE_URL: (propsObj['PADDLE_API_BASE_URL'] || 'https://api.paddle.com').replace(/\/$/, ''),
+    PADDLE_FRONTEND_TOKEN: propsObj['PADDLE_FRONTEND_TOKEN'],
+    PADDLE_ENVIRONMENT: propsObj['PADDLE_ENVIRONMENT'] || 'production',
 
     // --- Product Configuration ---
     // The ID of your individual subscription product in Paddle.
-    PADDLE_INDIVIDUAL_PRODUCT_ID: properties.getProperty('PADDLE_INDIVIDUAL_PRODUCT_ID'),
+    PADDLE_INDIVIDUAL_PRODUCT_ID: propsObj['PADDLE_INDIVIDUAL_PRODUCT_ID'],
     // The ID of your individual subscription price in Paddle.
-    PADDLE_INDIVIDUAL_PRICE_ID: properties.getProperty('PADDLE_INDIVIDUAL_PRICE_ID'),
+    PADDLE_INDIVIDUAL_PRICE_ID: propsObj['PADDLE_INDIVIDUAL_PRICE_ID'],
     // The ID of your bulk/team subscription product in Paddle.
-    PADDLE_BULK_PRODUCT_ID: properties.getProperty('PADDLE_BULK_PRODUCT_ID'),
+    PADDLE_BULK_PRODUCT_ID: propsObj['PADDLE_BULK_PRODUCT_ID'],
     // The URL for the checkout page, pre-configured in Paddle.
-    PADDLE_CHECKOUT_URL: properties.getProperty('PADDLE_CHECKOUT_URL'),
+    PADDLE_CHECKOUT_URL: propsObj['PADDLE_CHECKOUT_URL'],
   
     // --- Behavior Configuration ---
     // Trial period in seconds for new users. Default is 7 days (604800 seconds).
-    TRIAL_PERIOD_SECONDS: parseInt(properties.getProperty('TRIAL_PERIOD_SECONDS') || '604800', 10),
+    TRIAL_PERIOD_SECONDS: parseInt(propsObj['TRIAL_PERIOD_SECONDS'] || '604800', 10),
     // How long to cache a user's "licensed" status in seconds (e.g., 3600 = 1 hour).
-    LICENSED_USER_CACHE_EXPIRATION_SECONDS: parseInt(properties.getProperty('LICENSED_USER_CACHE_EXPIRATION_SECONDS') || '3600', 10),
+    LICENSED_USER_CACHE_EXPIRATION_SECONDS: parseInt(propsObj['LICENSED_USER_CACHE_EXPIRATION_SECONDS'] || '3600', 10),
     // How long to grant access if an error occurs, in seconds (e.g., 86400 = 24 hours).
-    ERROR_GRACE_PERIOD_SECONDS: parseInt(properties.getProperty('ERROR_GRACE_PERIOD_SECONDS') || '86400', 10),
+    ERROR_GRACE_PERIOD_SECONDS: parseInt(propsObj['ERROR_GRACE_PERIOD_SECONDS'] || '86400', 10),
     // How long to cache the domain-to-subscription map, in seconds (e.g., 3600 = 1 hour).
-    BULK_LICENSE_DOMAIN_MAP_CACHE_EXPIRATION_SECONDS: parseInt(properties.getProperty('BULK_LICENSE_DOMAIN_MAP_CACHE_EXPIRATION_SECONDS') || '3600', 10),
+    BULK_LICENSE_DOMAIN_MAP_CACHE_EXPIRATION_SECONDS: parseInt(propsObj['BULK_LICENSE_DOMAIN_MAP_CACHE_EXPIRATION_SECONDS'] || '3600', 10),
 
     // --- RevenueCat Configuration (Optional) ---
-    REVENUECAT_API_KEY: properties.getProperty('REVENUECAT_API_KEY'),
-    REVENUECAT_APP_USER_ID_PREFIX: properties.getProperty('REVENUECAT_APP_USER_ID_PREFIX') || 'linked_slides:',
-    REVENUECAT_ENTITLEMENT_ID: properties.getProperty('REVENUECAT_ENTITLEMENT_ID'),
-    REVENUECAT_API_VERSION: properties.getProperty('REVENUECAT_API_VERSION') || '2024-05-29',
+    REVENUECAT_API_KEY: propsObj['REVENUECAT_API_KEY'],
+    REVENUECAT_APP_USER_ID_PREFIX: propsObj['REVENUECAT_APP_USER_ID_PREFIX'] || 'linked_slides:',
+    REVENUECAT_ENTITLEMENT_ID: propsObj['REVENUECAT_ENTITLEMENT_ID'],
+    REVENUECAT_API_VERSION: propsObj['REVENUECAT_API_VERSION'] || '2024-05-29',
   };
 
-  config.LOCK_TIMEOUT_MS = parseInt(properties.getProperty('LOCK_TIMEOUT_MS') || '30000', 10); // Default to 30 seconds
-
+  config.LOCK_TIMEOUT_MS = parseInt(propsObj['LOCK_TIMEOUT_MS'] || '30000', 10); // Default to 30 seconds
   return config;
 }
 
