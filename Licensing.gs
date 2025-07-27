@@ -124,7 +124,7 @@ function _isUserLicensed(userEmail) {
       return { licensed: true };
     }
   } catch (e) {
-    console.error(`License check failed due to an error: ${e.toString()}`);
+    consoleError_(`License check failed`, e);
     // Grant a grace period if Paddle is down.
     userCache.put('is_licensed', 'true', config.ERROR_GRACE_PERIOD_SECONDS);
     return { licensed: true };
@@ -196,7 +196,7 @@ function _checkPaddleLicense(userEmail) {
   if (missingProperties.length > 0) {
     const errorMessage = `Paddle configuration is incomplete. The following script properties are not set: ${missingProperties.join(', ')}. ` +
       'Please configure them in your Apps Script project settings. Granting temporary access.';
-    console.error(errorMessage);
+    consoleError_(errorMessage);
     // Throwing an error here will be caught by _isUserLicensed and treated as a Paddle API failure,
     // which correctly grants a grace period to the user.
     throw new Error('Missing Paddle configuration; granting grace period.');
@@ -265,7 +265,7 @@ function _findAndClaimBulkLicense(userEmail) {
     const lock = LockService.getScriptLock();    
     try {
       if (!lock.tryLock(config.LOCK_TIMEOUT_MS)) {
-        console.warn(`Could not acquire lock for subId ${subId} and user ${userEmail} within ${config.LOCK_TIMEOUT_MS} ms. Considering user licensed.`);
+        consoleWarn_(`Could not acquire lock for subId ${subId} and user ${userEmail} within ${config.LOCK_TIMEOUT_MS} ms. Considering user licensed.`);
         // Return true here, assuming the user is licensed if we can't get the lock in time
         return true;
       }
@@ -305,7 +305,7 @@ function _findAndClaimBulkLicense(userEmail) {
         }
       }
     } catch (e) {
-      console.error(`Failed to check or claim bulk license for subscription ${subId}: ${e.toString()}`);
+      consoleError_(`Failed to check or claim bulk license for subscription ${subId}`, e);
     } finally {
       if (lock.hasLock()) lock.releaseLock(); // Release only if we actually acquired it
     }
@@ -376,7 +376,7 @@ function _updateSubscriptionCustomData(subscriptionId, customData) {
     console.log(`Successfully updated custom_data for subscription ${subscriptionId}.`);
     return true;
   } catch (e) {
-    console.error(`Failed to update custom_data for subscription ${subscriptionId}: ${e.toString()}`);
+    consoleError_(`Failed to update custom_data for subscription ${subscriptionId}`, e);
     return false;
   }
 }
