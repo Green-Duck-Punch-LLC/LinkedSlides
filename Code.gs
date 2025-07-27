@@ -45,7 +45,7 @@ function onOpen() {
   SlidesApp.getUi()
       .createAddonMenu() // Appropriate for Google Workspace Add-on deployment
       .addItem('Find linked copies', 'launchLinkedSlides')
-      .addItem('Contact Support', 'showContactSupportDialog')
+      .addItem('Contact support', 'showContactSupportDialog')
       .addToUi();
 }
 
