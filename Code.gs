@@ -45,9 +45,19 @@ function onOpen() {
   SlidesApp.getUi()
       .createAddonMenu() // Appropriate for Google Workspace Add-on deployment
       .addItem('Find linked copies', 'launchLinkedSlides')
+      .addItem('Contact Support', 'showContactSupportDialog')
       .addToUi();
 }
 
+/**
+ * Displays a dialog with instructions to contact support and include the user key.
+ */
+function showContactSupportDialog() {
+  const userKey = Session.getTemporaryActiveUserKey();
+  const htmlOutput = HtmlService.createHtmlOutput(`<p>Please email support@greenduckpunch.com and include the following user code in your message:</p><p><code>${userKey}</code></p>`)
+    .setTitle('Contact Support').setWidth(400).setHeight(200);
+  SlidesApp.getUi().showModalDialog(htmlOutput, 'Contact Support');
+}
 
 /**
  * Launches the link finder if it's not already launching. This ensures that 
@@ -134,7 +144,7 @@ function _performLinkedSlideSearch(presentationIdsString) {
       userCache.remove(isSearchingKey);
     }
   } catch (e) {
-    console.error(`Error in _performLinkedSlideSearch: ${e.toString()}`);
+    consoleError_(`Error in _performLinkedSlideSearch`, e);
     ui.showSidebar(HtmlService.createHtmlOutput("Search for linked slides failed. Please try again. If the problem persists, please contact support@greenduckpunch.com.").setTitle('Linked Slides Error'));
   }
 }
@@ -202,8 +212,8 @@ function generateSearchResults_(presentationIdsString) {
         }
       }
     } catch (e) {
-      errors.push(`Could not access presentation ID "${targetId}": ${e.message}`);
-      console.error(`Error processing presentation ${targetId}:`, e);
+      errors.push(`Could not process presentation ID "${targetId}": ${e.message}`);
+      consoleError_(`Error processing presentation ${targetId}:`, e);
     }
   }
 
@@ -280,11 +290,11 @@ function _goToSlide(slideId) {
     if (slide) {
       slide.selectAsCurrentPage();
     } else {
-      console.warn(`_goToSlide: Slide with ID "${slideId}" not found.`);
+      consoleWarn_(`_goToSlide: Slide with ID "${slideId}" not found.`);
       SlidesApp.getUi().alert('The slide could not be found. It might have been deleted from the presentation.');
     }
   } catch (e) {
-    console.error(`Error in _goToSlide with slideId "${slideId}": ${e.toString()}`);
+    consoleError_(`Error in _goToSlide with slideId "${slideId}"`, e);
     SlidesApp.getUi().alert('Could not navigate to the slide. Try right-clicking or Ctrl-clicking on the link and opening it in a new window or tab.');
   }
 }
@@ -374,4 +384,31 @@ function _getFileDetailsForIds(fileIds) {
     fileDetails.push(detail);
   });
   return fileDetails;
+}
+
+/**
+ * Logs a warning message to the console, along with the temporary active user key.
+ * @param {string} ...args The args to pass to the console method.
+ */
+function consoleWarn_(...args) {
+  const userKey = Session.getTemporaryActiveUserKey();
+  console.warn(...args, `(User Key: ${userKey})`);
+}
+
+/**
+ * Logs an error message to the console, along with the temporary active user key.
+ * @param {string} ...args The args to pass to the console method.
+ */
+function consoleError_(...args) {
+  const userKey = Session.getTemporaryActiveUserKey();
+  console.error(...args, `(User Key: ${userKey})`);
+}
+
+/**
+ * Logs a message to the console, along with the temporary active user key.
+ * @param {string} ...args The args to pass to the console method.
+ */
+function consoleLog_(...args) {
+  const userKey = Session.getTemporaryActiveUserKey();
+  console.log(...args, `(User Key: ${userKey})`);
 }
