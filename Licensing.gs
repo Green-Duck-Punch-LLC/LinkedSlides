@@ -373,7 +373,7 @@ function _getBulkLicenseDomainMap() {
 function _updateSubscriptionCustomData(subscriptionId, customData) {
   try {
     _paddleApiRequest(`/subscriptions/${subscriptionId}`, 'PATCH', { custom_data: customData });
-    console.log(`Successfully updated custom_data for subscription ${subscriptionId}.`);
+    consoleLog_(`Successfully updated custom_data for subscription ${subscriptionId}.`);
     return true;
   } catch (e) {
     consoleError_(`Failed to update custom_data for subscription ${subscriptionId}`, e);
