@@ -58,6 +58,8 @@
       padding: 0.75rem;
       margin-bottom: 1rem;
       border-radius: 0.5rem;
+      align-self: center;
+      text-align: left;
     }
     
     .message-info {
@@ -129,6 +131,9 @@
       & th {
         text-transform: uppercase;
       }
+      & td.trashed {
+        color: red;
+      }
     }
 
     #selection-view table th.action-col, #selection-view table td.action-col {
@@ -140,17 +145,6 @@
     #selection-view table td button.remove-btn {
       min-width: unset;
     }
-/*
-    #dummy-div {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: red;
-      cursor: not-allowed;
-    }
-*/
     .wait {
       cursor: wait;
     }
@@ -207,9 +201,31 @@
      * @param {string} msg The message to display.
      * @param {string} type The type of message ('info' or 'error').
      */
-    function showMessage(msg, type = 'info') {
+     function showMessage(msg, type = 'info') {
       const messageDiv = document.getElementById('message');
       messageDiv.textContent = msg;
+      messageDiv.className = `${type} message-${type}`;
+    }
+
+    /**
+     * Displays messages in the dialog.
+     * @param {string} msgs The messages to display.
+     * @param {string} type The type of messages ('info' or 'error').
+     */
+     function showMessages(msgs, type = 'info') {
+      if (msgs.length == 1) {
+        showMessage(msgs[0], type);
+        return;
+      }
+      const messageDiv = document.getElementById('message');
+      messageDiv.textContent = 'Note:';
+      const ulNode = document.createElement('ul');
+      messageDiv.appendChild(ulNode);
+      msgs.forEach(msg => {
+        const liNode = document.createElement('li');
+        liNode.textContent = msg;
+        ulNode.appendChild(liNode);
+      });
       messageDiv.className = `${type} message-${type}`;
     }
 
@@ -359,6 +375,10 @@
         // The parentName is now attached directly to the file object. Default if missing.
         folderCell.textContent = file.parentName || 'My Drive';
 
+        if (file.trashed) {
+          folderCell.classList.add('trashed');
+        }
+
         const actionCell = row.insertCell();
         actionCell.className = 'action-col';
 
@@ -393,9 +413,12 @@
 
       google.script.run
         .withSuccessHandler(files => {
-          // files is an array of file objects {id, name, parentName}
+          // files is an array of file objects {id, name, parentName, trashed}
+          let msgs = [];
           files.forEach(file => {
             selectedFiles.set(file.id, file);
+            if (file.trashed) 
+              msgs.push(`"${file.name}" is currently in the trash.`);
           });
 
           // If some files couldn't be loaded (e.g., deleted or permissions changed),
@@ -403,19 +426,23 @@
           if (files.length < fileIds.length) {
               const missingCount = fileIds.length - files.length;
               const noun = missingCount === 1 ? 'file' : 'files';
-              showMessage(`Could not load ${missingCount} ${noun}. They may have been deleted or permissions changed.`, 'error');
+              msgs.push(`Could not load ${missingCount} ${noun}, perhaps due to removal or permissions.`);
+          }
+          if (msgs.length > 0) {
+              showMessages(msgs, 'error');
           } else {
               hideMessage();
           }
 
           renderSelectedFilesTable();
           document.getElementById('add-files-btn').disabled = false;
+          saveSelectedFiles();
         })
         .withFailureHandler(error => {
           console.error('Failed to load initial file details:', error);
           showMessage('Error loading previously selected files. Please add them again.', 'error');
           document.getElementById('add-files-btn').disabled = false;
-          renderSelectedFilesTable(); // Render the empty table
+          renderSelectedFilesTable();
         })
         ._getFileDetailsForIds(fileIds);
     }

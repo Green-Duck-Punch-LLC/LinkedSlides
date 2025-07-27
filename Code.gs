@@ -332,7 +332,7 @@ function _getFileDetailsForIds(fileIds) {
   fileIds.forEach(id => {
     fileRequests.push({
       method: "GET",
-      endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name,parents,driveId`
+      endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name,parents,driveId,trashed`
     });
   });
   const fileResponses = EDo({
@@ -341,7 +341,9 @@ function _getFileDetailsForIds(fileIds) {
   });
   const parentNameMap = {};
   fileResponses.forEach(file => {
-    if (file.parents && file.parents.length > 0 && file.parents[0] != file.driveId)
+    if (file.error)
+      consoleError_(`Error retrieving details for file`, file.error);
+    else if (file.parents && file.parents.length > 0 && file.parents[0] != file.driveId)
       parentNameMap[file.parents[0]]= 'Unknown Folder';
     else if (file.driveId) {
       parentNameMap[file.driveId] = 'Unknown Shared Drive'
@@ -366,15 +368,22 @@ function _getFileDetailsForIds(fileIds) {
     batchPath: batchPath,
   });
   parentResponses.forEach(parent => {
-    parentNameMap[parent.id] = parent.name;
+    if (parent.error)
+      consoleError_(`Error retrieving parent name`, parent.error);
+    else
+      parentNameMap[parent.id] = parent.name;
   });
   const fileDetails = [];
   fileResponses.forEach(file => {
+    if (file.error) return; // Errors were logged earlier.
     const detail = {
       id: file.id,
-      name: file.name
+      name: file.name,
+      trashed: file.trashed
     };
-    if (file.parents && file.parents.length > 0) {
+    if (file.trashed) {
+      detail.parentName = '(Trash)';
+    } else if (file.parents && file.parents.length > 0) {
       detail.parentName = parentNameMap[file.parents[0]];
     } else if (file.driveId) {
       detail.parentName = parentNameMap[file.driveId];

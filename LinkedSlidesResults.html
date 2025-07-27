@@ -191,14 +191,6 @@ environment, please contact Green Duck Punch, LLC.
     <p>
     <button id="find-linked-slides" onclick="findLinkedSlides()" class="action">Start new search</button>
     </p>
-    <p class="gray">
-    <? if (anyLinkedResults){ ?>
-      The following slide(s) were involved in linking relationships
-    <? } else if (displayRowsJson.length > 2 && !anyLinkedResults) { // Check if displayRowsJson is not just '[]' ?>
-      No linked slides were found in the selected presentations
-    <? } ?>
-        <span id="results-timestamp-message"></span>.
-      </p>
     <? if (errors && errors.length > 0) { ?>
       <div id="errors" class="error">
         <h3>Errors encountered:</h3>
@@ -208,6 +200,14 @@ environment, please contact Green Duck Punch, LLC.
           <? }); ?>
         </ul>
       </div>
+    <p class="gray">
+    <? if (anyLinkedResults){ ?>
+      The following slide(s) were involved in linking relationships
+    <? } else if (displayRowsJson.length > 2 && !anyLinkedResults) { // Check if displayRowsJson is not just '[]' ?>
+      No linked slides were found in the selected presentations
+    <? } ?>
+        <span id="results-timestamp-message"></span>.
+    </p>
     <? } ?>
     <svg style="display: none">
       <defs>
