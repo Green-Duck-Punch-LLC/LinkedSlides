@@ -171,6 +171,11 @@ function generateSearchResults_(presentationIdsString) {
       pageNumber: pageNumber,
       foundLink: false // Flag to track if a link is found
     };
+    // Get the unformatted text associated with the first placeholder on the slide
+    const titlePh = slide.getPlaceholder(SlidesApp.PlaceholderType.CENTERED_TITLE) 
+      || slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
+    const title = titlePh?.asShape()?.getText()?.asRenderedString();
+    allSourceSlidesMap[slideId].title = title;
   });
 
   const displayRows = []; // This will be the final array of rows for the table
@@ -202,6 +207,7 @@ function generateSearchResults_(presentationIdsString) {
 
             displayRows.push({
               sourceSlidePageNumber: allSourceSlidesMap[linkedSourceSlideId].pageNumber,
+              sourceSlideTitle: allSourceSlidesMap[linkedSourceSlideId].title,
               sourceSlideId: linkedSourceSlideId,
               targetPresentationName: targetPresentationName,
               targetPresentationId: targetId,
@@ -223,6 +229,7 @@ function generateSearchResults_(presentationIdsString) {
       displayRows.push({
         sourceSlidePageNumber: allSourceSlidesMap[slideId].pageNumber,
         sourceSlideId: allSourceSlidesMap[slideId].id,
+        sourceSlideTitle: allSourceSlidesMap[slideId].title,
         targetPresentationName: '',
         targetPresentationId: '',
         targetSlidePageNumber: '',
