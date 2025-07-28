@@ -22,6 +22,7 @@ For commercial use or specific licensing terms within Google's proprietary
 environment, please contact Green Duck Punch, LLC.
 -->
 <html>
+
 <head>
   <base target="_top">
   <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
@@ -30,6 +31,7 @@ environment, please contact Green Duck Punch, LLC.
       --bg-color: #f7fafc;
       --text-color: #222;
     }
+
     body {
       background-color: var(--bg-color);
       display: flex;
@@ -37,7 +39,7 @@ environment, please contact Green Duck Punch, LLC.
       justify-content: center;
       align-items: center;
     }
-    
+
     #container {
       margin: auto;
       text-align: center;
@@ -45,6 +47,7 @@ environment, please contact Green Duck Punch, LLC.
       background-color: white;
       border-radius: 0.5rem;
       box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
       & p {
         margin-bottom: 1rem;
       }
@@ -53,33 +56,43 @@ environment, please contact Green Duck Punch, LLC.
     #errors {
       margin: 1rem 0;
     }
+
     #container table {
       table-layout: fixed;
       width: 100%;
       border: 1px solid #ebebeb;
       border-collapse: collapse;
+
       &.compact .source-slide-cell {
         white-space: nowrap;
       }
-      & > :not(:last-child), & > tbody > :not(:last-child) {
+
+      &> :not(:last-child),
+      &>tbody> :not(:last-child) {
         border-top-width: 0px;
         border-bottom: 1px solid #ebebeb;
       }
-      & th, & td {
+
+      & th,
+      & td {
         padding: 0.5rem 0;
         text-align: center;
         overflow: hidden;
         text-overflow: ellipsis;
+
         &.source-slide-cell:hover {
           white-space: unset;
         }
       }
+
       & th {
         padding-bottom: 0;
         text-transform: uppercase;
         border-bottom: none;
       }
-      & th:first-child, & td:first-child {
+
+      & th:first-child,
+      & td:first-child {
         border-right: 1px solid #ebebeb;
       }
     }
@@ -92,36 +105,37 @@ environment, please contact Green Duck Punch, LLC.
     .dropdown {
       position: relative;
       display: inline-block;
-      width: 100%; /* Make dropdown take full width of th */
+      width: 100%;
     }
+
     .dropdown-content {
       display: none;
-      position: absolute; /* Changed to absolute for portal pattern */
+      position: absolute;
       background-color: #f9f9f9;
-      box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-      z-index: 1000; /* Increased z-index */
+      box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
     }
-    .dropdown-content > div {
+
+    .dropdown-content>div {
       padding: 10px;
       border-radius: 0.25rem;
-      max-height: 250px; /* Scrollable if many options, adjusted for ~10 items */
+      max-height: 250px;
       overflow-y: auto;
-      text-align: left; /* Ensure checkboxes align left */
-      /* Mask to indicate scrolling */
+      text-align: left;
       mask-image: linear-gradient(to bottom, black 0%, black 90%, transparent 100%);
     }
 
     .dropdown-content.no-mask {
-       /* Remove the mask when scrolling is not needed */
-       mask-image: none;
-       -webkit-mask-image: none; /* For older browsers */
-
+      mask-image: none;
+      -webkit-mask-image: none;
     }
+
     .dropdown-content label {
       display: block;
       margin-bottom: 5px;
       cursor: pointer;
     }
+
     .dropdown-item {
       padding: 8px 12px;
       cursor: pointer;
@@ -141,94 +155,107 @@ environment, please contact Green Duck Punch, LLC.
       height: auto;
       line-height: inherit;
     }
+
     .dropdown-item:hover {
       background-color: #f1f1f1;
       /* Ensure hover doesn't re-introduce button styles */
       border: none;
       box-shadow: none;
     }
+
     .dropdown-divider {
       margin: 0.5rem 0;
       border: 0;
       border-top: 1px solid #e2e8f0;
     }
-    .dropdown-button span{
-      flex-grow: 1; /* Allow text to grow */
+
+    .dropdown-button span {
+      flex-grow: 1;
       text-align: left;
     }
+
     /* Style for the small dropdown arrow */
     .dropdown-arrow {
-      font-size: 1.2em; /* Make it visible */
-      line-height: 1; /* Align with text */
+      font-size: 1.2em;
+      line-height: 1;
       padding: .25em;
       display: inline-block;
       border-radius: .25em;
+
       /* Invert the filtered icon for contrast */
       &:has(.filtered-icon:not(.hidden)) {
         background-color: black;
         color: white;
       }
     }
+
     #loading-overlay {
-      position: fixed; /* Cover the whole viewport */
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white */
-      z-index: 2000; /* Above other content */
+      background-color: rgba(255, 255, 255, 0.8);
+      z-index: 2000;
       display: flex;
       justify-content: center;
       align-items: center;
       color: #333;
       font-size: 1.2em;
     }
-    .filterable-icon, .filtered-icon {
+
+    .filterable-icon,
+    .filtered-icon {
       width: 1em;
       height: 1em;
       vertical-align: middle;
       display: inline-block;
     }
+
     .hidden {
       display: none;
     }
   </style>
 </head>
+
 <body>
   <div id="loading-overlay" style="display: none;"><span>Determining selection...</span></div>
   <div id="container">
     <p>
-    <button id="find-linked-slides" onclick="findLinkedSlides()" class="action">Start new search</button>
+      <button id="find-linked-slides" onclick="findLinkedSlides()" class="action">Start new search</button>
     </p>
     <? if (errors && errors.length > 0) { ?>
-      <div id="errors" class="error">
-        <h3>Errors encountered:</h3>
-        <ul>
-          <? errors.forEach(error => { ?>
-            <li><?= error ?></li>
-          <? }); ?>
-        </ul>
-      </div>
+    <div id="errors" class="error">
+      <h3>Errors encountered:</h3>
+      <ul>
+        <? errors.forEach(error => { ?>
+        <li>
+          <?= error ?>
+        </li>
+        <? }); ?>
+      </ul>
+    </div>
     <? } ?>
     <p class="gray">
-    <? if (anyLinkedResults){ ?>
+      <? if (anyLinkedResults){ ?>
       The following slide(s) were involved in linking relationships
-    <? } else if (displayRowsJson.length > 2 && !anyLinkedResults) { // Check if displayRowsJson is not just '[]' ?>
+      <? } else if (displayRowsJson.length > 2 && !anyLinkedResults) { // Check if displayRowsJson is not just '[]' ?>
       No linked slides were found in the selected presentations
-    <? } ?>
-        <span id="results-timestamp-message"></span>.
+      <? } ?>
+      <span id="results-timestamp-message"></span>.
     </p>
     <svg style="display: none">
       <defs>
         <symbol id="filterable-icon" viewBox="0 0 12.7 12.7" stroke="currentColor" fill="currentColor">
-          <path d="m0.794 1.68h11.1" style="paint-order:stroke fill markers"/>
-          <path d="m3.18 6.35h6.35" style="paint-order:stroke fill markers"/>
-          <path d="m5.69 11h1.32" style="paint-order:stroke fill markers"/>
+          <path d="m0.794 1.68h11.1" style="paint-order:stroke fill markers" />
+          <path d="m3.18 6.35h6.35" style="paint-order:stroke fill markers" />
+          <path d="m5.69 11h1.32" style="paint-order:stroke fill markers" />
         </symbol>
         <symbol id="filtered-icon" viewBox="0 0 12.7 12.7" stroke="currentColor" fill="currentColor">
-          <path d="m0.0346 0.0692 4.77 4.77v7.83h3.09v-7.82l4.77-4.77h-6.31v4.35h-5.17e-4v-4.35h-6.32z" stroke-linejoin="round" stroke-width=".974" style="paint-order:stroke fill markers"/>
+          <path d="m0.0346 0.0692 4.77 4.77v7.83h3.09v-7.82l4.77-4.77h-6.31v4.35h-5.17e-4v-4.35h-6.32z"
+            stroke-linejoin="round" stroke-width=".974" style="paint-order:stroke fill markers" />
         </symbol>
-      </defs>      
+      </defs>
     </svg>
 
     <label><input type="checkbox" id="compact-mode-checkbox">Show abbreviated titles</label>
@@ -241,26 +268,41 @@ environment, please contact Green Duck Punch, LLC.
         <tr>
           <th scope="col" id="th-sourceSlidePageNumber">
             <div class="dropdown">
-                <button type="button" class="dropdown-button" data-column="sourceSlidePageNumber" data-target="filter-sourceSlidePageNumber">
-                    <span>Slide</span> <span class="dropdown-arrow"><svg class="filterable-icon"><use xlink:href="#filterable-icon"></use></svg><svg class="filtered-icon hidden"><use xlink:href="#filtered-icon"></use></svg></span>
-                </button>
-                <!-- Dropdown content will be moved here by JS -->
+              <button type="button" class="dropdown-button" data-column="sourceSlidePageNumber"
+                data-target="filter-sourceSlidePageNumber">
+                <span>Slide</span> <span class="dropdown-arrow"><svg class="filterable-icon">
+                    <use xlink:href="#filterable-icon"></use>
+                  </svg><svg class="filtered-icon hidden">
+                    <use xlink:href="#filtered-icon"></use>
+                  </svg></span>
+              </button>
+              <!-- Dropdown content will be moved here by JS -->
             </div>
           </th>
           <th scope="col" id="th-targetPresentationName">
-             <div class="dropdown">
-                <button type="button" class="dropdown-button" data-column="targetPresentationName" data-target="filter-targetPresentationName">
-                    <span>Presentation</span> <span class="dropdown-arrow"><svg class="filterable-icon"><use xlink:href="#filterable-icon"></use></svg><svg class="filtered-icon hidden"><use xlink:href="#filtered-icon"></use></svg></span>
-                </button>
-                <!-- Dropdown content will be moved here by JS -->
+            <div class="dropdown">
+              <button type="button" class="dropdown-button" data-column="targetPresentationName"
+                data-target="filter-targetPresentationName">
+                <span>Presentation</span> <span class="dropdown-arrow"><svg class="filterable-icon">
+                    <use xlink:href="#filterable-icon"></use>
+                  </svg><svg class="filtered-icon hidden">
+                    <use xlink:href="#filtered-icon"></use>
+                  </svg></span>
+              </button>
+              <!-- Dropdown content will be moved here by JS -->
             </div>
           </th>
           <th scope="col" id="th-targetSlidePageNumber">
             <div class="dropdown">
-                <button type="button" class="dropdown-button" data-column="targetSlidePageNumber" data-target="filter-targetSlidePageNumber">
-                    <span>Slide</span> <span class="dropdown-arrow"><svg class="filterable-icon"><use xlink:href="#filterable-icon"></use></svg><svg class="filtered-icon hidden"><use xlink:href="#filtered-icon"></use></svg></span>
-                </button>
-                <!-- Dropdown content will be moved here by JS -->
+              <button type="button" class="dropdown-button" data-column="targetSlidePageNumber"
+                data-target="filter-targetSlidePageNumber">
+                <span>Slide</span> <span class="dropdown-arrow"><svg class="filterable-icon">
+                    <use xlink:href="#filterable-icon"></use>
+                  </svg><svg class="filtered-icon hidden">
+                    <use xlink:href="#filtered-icon"></use>
+                  </svg></span>
+              </button>
+              <!-- Dropdown content will be moved here by JS -->
             </div>
           </th>
         </tr>
@@ -286,9 +328,9 @@ environment, please contact Green Duck Punch, LLC.
 
     // Object to store current filter selections for each column
     const activeFilters = {
-        sourceSlidePageNumber: new Set(),
-        targetPresentationName: new Set(),
-        targetSlidePageNumber: new Set()
+      sourceSlidePageNumber: new Set(),
+      targetPresentationName: new Set(),
+      targetSlidePageNumber: new Set()
     };
 
     // Store references to the original dropdown content elements (before they are moved)
@@ -338,47 +380,47 @@ environment, please contact Green Duck Punch, LLC.
      * Renders the table body based on the current tableData.
      */
     function renderTable() {
-        const tbody = document.getElementById('resultsTableBody');
-        tbody.innerHTML = ''; // Clear existing rows
+      const tbody = document.getElementById('resultsTableBody');
+      tbody.innerHTML = ''; // Clear existing rows
 
-        tableData.forEach(rowData => {
-            const row = tbody.insertRow();
-            // Source Slide # (with link to source slide if applicable)
-            const sourceSlideCell = row.insertCell();
-            sourceSlideCell.classList.add('source-slide-cell');
-            let sourceSlideCellText = `${rowData.sourceSlidePageNumber}`;
-            if (rowData.sourceSlideTitle) {
-              sourceSlideCellText += `: ${rowData.sourceSlideTitle}`;
-            }
-            if (rowData.sourceSlideId) { // Check if sourceSlideId exists for linking
-                const slideUrl = "https://docs.google.com/presentation/d/" + activePresentationId + "/edit#slide=id." + rowData.sourceSlideId;
-                // The href is for right-click > open in new tab functionality, while onclick handles the in-app navigation
-                const aNode = createLink(slideUrl, `ls_${activePresentationId}`, sourceSlideCellText, `goToSlide('${rowData.sourceSlideId}'); return false;`);
-                sourceSlideCell.appendChild(aNode);
-            } else {
-                sourceSlideCell.textContent = sourceSlideCellText;
-            }
+      tableData.forEach(rowData => {
+        const row = tbody.insertRow();
+        // Source Slide # (with link to source slide if applicable)
+        const sourceSlideCell = row.insertCell();
+        sourceSlideCell.classList.add('source-slide-cell');
+        let sourceSlideCellText = `${rowData.sourceSlidePageNumber}`;
+        if (rowData.sourceSlideTitle) {
+          sourceSlideCellText += `: ${rowData.sourceSlideTitle}`;
+        }
+        if (rowData.sourceSlideId) { // Check if sourceSlideId exists for linking
+          const slideUrl = "https://docs.google.com/presentation/d/" + activePresentationId + "/edit#slide=id." + rowData.sourceSlideId;
+          // The href is for right-click > open in new tab functionality, while onclick handles the in-app navigation
+          const aNode = createLink(slideUrl, `ls_${activePresentationId}`, sourceSlideCellText, `goToSlide('${rowData.sourceSlideId}'); return false;`);
+          sourceSlideCell.appendChild(aNode);
+        } else {
+          sourceSlideCell.textContent = sourceSlideCellText;
+        }
 
-            // Target Presentation Name (with link)
-            const targetPresCell = row.insertCell();
-            if (rowData.targetPresentationId){
-                const url = "https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit";
-                const aNode = createLink(url, `ls_${rowData.targetPresentationId}`, rowData.targetPresentationName);
-                targetPresCell.appendChild(aNode);
-            } else {
-                targetPresCell.textContent = '';
-            }
+        // Target Presentation Name (with link)
+        const targetPresCell = row.insertCell();
+        if (rowData.targetPresentationId) {
+          const url = "https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit";
+          const aNode = createLink(url, `ls_${rowData.targetPresentationId}`, rowData.targetPresentationName);
+          targetPresCell.appendChild(aNode);
+        } else {
+          targetPresCell.textContent = '';
+        }
 
-            // Target Slide # (with link to target slide if applicable)
-            const targetSlideCell = row.insertCell();
-            if (rowData.targetSlideObjectId){
-                const url = "https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit#slide=id." + rowData.targetSlideObjectId;
-                const aNode = createLink(url, `ls_${rowData.targetPresentationId}`, rowData.targetSlidePageNumber);
-                targetSlideCell.appendChild(aNode);
-            } else {
-                targetSlideCell.textContent = '';
-            }
-        });
+        // Target Slide # (with link to target slide if applicable)
+        const targetSlideCell = row.insertCell();
+        if (rowData.targetSlideObjectId) {
+          const url = "https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit#slide=id." + rowData.targetSlideObjectId;
+          const aNode = createLink(url, `ls_${rowData.targetPresentationId}`, rowData.targetSlidePageNumber);
+          targetSlideCell.appendChild(aNode);
+        } else {
+          targetSlideCell.textContent = '';
+        }
+      });
     }
 
     /**
@@ -387,213 +429,213 @@ environment, please contact Green Duck Punch, LLC.
      * @param {string} direction The direction to sort ('asc' or 'desc').
      */
     function sortTable(columnKey, direction) {
-        // Remove sort arrows from all headers
-        document.querySelectorAll('th').forEach(th => {
-          th.classList.remove('asc', 'desc');
-        });
-        let header = document.getElementById('th-' + columnKey);
-        header.classList.add(direction);
+      // Remove sort arrows from all headers
+      document.querySelectorAll('th').forEach(th => {
+        th.classList.remove('asc', 'desc');
+      });
+      let header = document.getElementById('th-' + columnKey);
+      header.classList.add(direction);
 
-        tableData.sort((a, b) => {
-            const valA = a[columnKey];
-            const valB = b[columnKey];
+      tableData.sort((a, b) => {
+        const valA = a[columnKey];
+        const valB = b[columnKey];
 
-            // Handle numbers for numeric sorting (e.g., slide numbers)
-            const isNumeric = (typeof valA === 'number' || typeof valA === 'string' && !isNaN(parseFloat(valA))) &&
-                              (typeof valB === 'number' || typeof valB === 'string' && !isNaN(parseFloat(valB)));
+        // Handle numbers for numeric sorting (e.g., slide numbers)
+        const isNumeric = (typeof valA === 'number' || typeof valA === 'string' && !isNaN(parseFloat(valA))) &&
+          (typeof valB === 'number' || typeof valB === 'string' && !isNaN(parseFloat(valB)));
 
-            let comparison = 0;
-            if (isNumeric) {
-                comparison = parseFloat(valA) - parseFloat(valB);
-            } else {
-                // Treat empty strings as coming after non-empty strings in ASC order
-                // and before in DESC order for better visual grouping
-                if (valA === '' && valB !== '') comparison = 1;
-                else if (valA !== '' && valB === '') comparison = -1;
-                else if (valA === '' && valB === '') comparison = 0;
-                else {
-                    comparison = String(valA).localeCompare(String(valB));
-                }
-            }
+        let comparison = 0;
+        if (isNumeric) {
+          comparison = parseFloat(valA) - parseFloat(valB);
+        } else {
+          // Treat empty strings as coming after non-empty strings in ASC order
+          // and before in DESC order for better visual grouping
+          if (valA === '' && valB !== '') comparison = 1;
+          else if (valA !== '' && valB === '') comparison = -1;
+          else if (valA === '' && valB === '') comparison = 0;
+          else {
+            comparison = String(valA).localeCompare(String(valB));
+          }
+        }
 
-            return direction === 'asc' ? comparison : -comparison;
-        });
-        renderTable();
+        return direction === 'asc' ? comparison : -comparison;
+      });
+      renderTable();
     }
 
     /**
      * Filters the source slides to only include the slides that are selected in the presentation.
      */
     function filterSourceToSelected() {
-        const columnKey = 'sourceSlidePageNumber';
-        const dropdownContent = dropdownContentCache[columnKey];
-        const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
-        const loadingOverlay = document.getElementById('loading-overlay');
+      const columnKey = 'sourceSlidePageNumber';
+      const dropdownContent = dropdownContentCache[columnKey];
+      const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
+      const loadingOverlay = document.getElementById('loading-overlay');
 
-        // Show loading overlay to indicate work and block UI
-        if (loadingOverlay) loadingOverlay.style.display = 'flex';
+      // Show loading overlay to indicate work and block UI
+      if (loadingOverlay) loadingOverlay.style.display = 'flex';
 
-        google.script.run
-            .withSuccessHandler(selectionInfo => {
-                if (loadingOverlay) loadingOverlay.style.display = 'none';
+      google.script.run
+        .withSuccessHandler(selectionInfo => {
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
 
-                const slideIdsToMatch = new Set(selectionInfo.selectedSlideIds || []);
-                const sourcePageNumbersToSelect = new Set();
-                originalTableData.forEach(row => {
-                    if (slideIdsToMatch.has(row.sourceSlideId)) {
-                        sourcePageNumbersToSelect.add(String(row.sourceSlidePageNumber));
-                    }
-                });
+          const slideIdsToMatch = new Set(selectionInfo.selectedSlideIds || []);
+          const sourcePageNumbersToSelect = new Set();
+          originalTableData.forEach(row => {
+            if (slideIdsToMatch.has(row.sourceSlideId)) {
+              sourcePageNumbersToSelect.add(String(row.sourceSlidePageNumber));
+            }
+          });
 
-                checkboxes.forEach(cb => { cb.checked = sourcePageNumbersToSelect.has(cb.value); });
-                filterTable();
-            })
-            .withFailureHandler(err => {
-                if (loadingOverlay) loadingOverlay.style.display = 'none';
-                console.error('Failed to get selection info:', err);
-                alert('Could not update selection from the presentation. Please try again.');
-            })
-            ._getSelectionInfo();
+          checkboxes.forEach(cb => { cb.checked = sourcePageNumbersToSelect.has(cb.value); });
+          filterTable();
+        })
+        .withFailureHandler(err => {
+          if (loadingOverlay) loadingOverlay.style.display = 'none';
+          console.error('Failed to get selection info:', err);
+          alert('Could not update selection from the presentation. Please try again.');
+        })
+        ._getSelectionInfo();
     }
 
     /**
      * Populates the filter dropdowns with unique values from each column.
      */
     function populateFilterDropdowns() {
-        const columnKeys = ['sourceSlidePageNumber', 'targetPresentationName', 'targetSlidePageNumber'];
-        const globalContainer = document.getElementById('global-dropdown-container');
+      const columnKeys = ['sourceSlidePageNumber', 'targetPresentationName', 'targetSlidePageNumber'];
+      const globalContainer = document.getElementById('global-dropdown-container');
 
-        columnKeys.forEach(key => {
-            // Create the dropdown content div
-            const dropdownContent = document.createElement('div');
-            dropdownContent.id = `filter-${key}`;
-            dropdownContent.classList.add('dropdown-content');
-            // Append it to the global container initially (it will be shown/hidden by JS)
-            globalContainer.appendChild(dropdownContent);
+      columnKeys.forEach(key => {
+        // Create the dropdown content div
+        const dropdownContent = document.createElement('div');
+        dropdownContent.id = `filter-${key}`;
+        dropdownContent.classList.add('dropdown-content');
+        // Append it to the global container initially (it will be shown/hidden by JS)
+        globalContainer.appendChild(dropdownContent);
 
-            // Store a reference to this dropdownContent for later use
-            dropdownContentCache[key] = dropdownContent;
+        // Store a reference to this dropdownContent for later use
+        dropdownContentCache[key] = dropdownContent;
 
-            dropdownContent.innerHTML = ''; // Clear previous options
-            const innerDiv = document.createElement('div');
-            dropdownContent.appendChild(innerDiv);
-            
-            if (key === 'sourceSlidePageNumber') {
-                const createFilterLink = (text) => {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'dropdown-item';
-                    button.textContent = text;
-                    button.onclick = (e) => {
-                        e.preventDefault();
-                        filterSourceToSelected();
-                        closeDropdownAndFocusButton(key);
-                    };
-                    innerDiv.appendChild(button);
-                };
-                
-                createFilterLink('Select current slide(s)');
+        dropdownContent.innerHTML = ''; // Clear previous options
+        const innerDiv = document.createElement('div');
+        dropdownContent.appendChild(innerDiv);
 
-                const hr = document.createElement('hr');
-                hr.className = 'dropdown-divider';
-                innerDiv.appendChild(hr);
-            }
-
-            // Add Sort Actions
-            const sortAscBtn = document.createElement('button');
-            sortAscBtn.type = 'button';
-            sortAscBtn.className = 'dropdown-item';
-            sortAscBtn.textContent = 'Sort Ascending';
-            sortAscBtn.onclick = () => {
-                sortTable(key, 'asc');
-                closeDropdownAndFocusButton(key);
+        if (key === 'sourceSlidePageNumber') {
+          const createFilterLink = (text) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'dropdown-item';
+            button.textContent = text;
+            button.onclick = (e) => {
+              e.preventDefault();
+              filterSourceToSelected();
+              closeDropdownAndFocusButton(key);
             };
-            innerDiv.appendChild(sortAscBtn);
+            innerDiv.appendChild(button);
+          };
 
-            const sortDescBtn = document.createElement('button');
-            sortDescBtn.type = 'button';
-            sortDescBtn.className = 'dropdown-item';
-            sortDescBtn.textContent = 'Sort Descending';
-            sortDescBtn.onclick = () => {
-                sortTable(key, 'desc');
-                closeDropdownAndFocusButton(key);
-            };
-            innerDiv.appendChild(sortDescBtn);
+          createFilterLink('Select current slide(s)');
 
-            const hr = document.createElement('hr');
-            hr.className = 'dropdown-divider';
-            innerDiv.appendChild(hr);
+          const hr = document.createElement('hr');
+          hr.className = 'dropdown-divider';
+          innerDiv.appendChild(hr);
+        }
 
-            const uniqueValues = new Set();
-            originalTableData.forEach(row => {
-                uniqueValues.add(row[key]);
-            });
+        // Add Sort Actions
+        const sortAscBtn = document.createElement('button');
+        sortAscBtn.type = 'button';
+        sortAscBtn.className = 'dropdown-item';
+        sortAscBtn.textContent = 'Sort Ascending';
+        sortAscBtn.onclick = () => {
+          sortTable(key, 'asc');
+          closeDropdownAndFocusButton(key);
+        };
+        innerDiv.appendChild(sortAscBtn);
 
-            // Convert Set to Array, sort, and ensure blank is at the top if present
-            let sortedValues = Array.from(uniqueValues).sort((a, b) => {
-                // Custom sort to put (Blank) at the top
-                const valA = (a === null || a === undefined || a === '') ? '' : a;
-                const valB = (b === null || b === undefined || b === '') ? '' : b;
+        const sortDescBtn = document.createElement('button');
+        sortDescBtn.type = 'button';
+        sortDescBtn.className = 'dropdown-item';
+        sortDescBtn.textContent = 'Sort Descending';
+        sortDescBtn.onclick = () => {
+          sortTable(key, 'desc');
+          closeDropdownAndFocusButton(key);
+        };
+        innerDiv.appendChild(sortDescBtn);
 
-                if (valA === '' && valB !== '') return -1;
-                if (valA !== '' && valB === '') return 1;
-                if (valA === '' && valB === '') return 0;
+        const hr = document.createElement('hr');
+        hr.className = 'dropdown-divider';
+        innerDiv.appendChild(hr);
 
-                // Numeric sort for slide numbers
-                if (key === 'sourceSlidePageNumber' || key === 'targetSlidePageNumber') {
-                    return parseFloat(valA) - parseFloat(valB);
-                }
-                return String(valA).localeCompare(String(valB));
-            });
-            
-            // Add the (De)select All checkbox at the very top
-            const selectAllLabel = document.createElement('label');
-            selectAllLabel.innerHTML = '<input type="checkbox" class="select-all-toggle" data-column="' + key + '"> All';
-            innerDiv.appendChild(selectAllLabel);
-            
-            const selectAllCheckbox = selectAllLabel.querySelector('input');
-            selectAllCheckbox.onchange = function(event) {
-                toggleSelectAll(event, key); // Pass column key
-            };
-
-            // Initialize activeFilters for this column: by default, all are selected
-            activeFilters[key].clear(); // Clear existing
-            sortedValues.forEach(value => activeFilters[key].add(String(value)));
-
-
-            sortedValues.forEach(value => {
-                const displayValue = (value === '' || value === null || value === undefined) ? '(Blank)' : value;
-                const checkboxId = "checkbox-" + key + "-" + value; // Unique ID for checkbox
-
-                const label = document.createElement('label');
-                label.innerHTML = "<input type=\"checkbox\" id=\"" + checkboxId + "\" data-column=\"" + key + "\" value=\"" + value + "\" onchange=\"filterTable()\"> " + displayValue;
-                innerDiv.appendChild(label);
-
-                const checkbox = label.querySelector('input');
-                // All are checked by default on initial population
-                checkbox.checked = true;
-            });
-
-            // Set initial state of "Select All" checkbox to true after all options are populated
-            selectAllCheckbox.checked = true;
-
-            // Add accessibility event listeners
-            dropdownContent.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    e.stopPropagation();
-                    closeDropdownAndFocusButton(key);
-                }
-            });
-
-            dropdownContent.addEventListener('focusout', (e) => {
-                // If focus moves to an element not within this dropdown, close it.
-                if (!dropdownContent.contains(e.relatedTarget)) {
-                    dropdownContent.style.display = 'none';
-                    const button = document.querySelector(`.dropdown-button[data-column="${key}"]`);
-                    if (button) button.setAttribute('aria-expanded', 'false');
-                }
-            });
+        const uniqueValues = new Set();
+        originalTableData.forEach(row => {
+          uniqueValues.add(row[key]);
         });
+
+        // Convert Set to Array, sort, and ensure blank is at the top if present
+        let sortedValues = Array.from(uniqueValues).sort((a, b) => {
+          // Custom sort to put (Blank) at the top
+          const valA = (a === null || a === undefined || a === '') ? '' : a;
+          const valB = (b === null || b === undefined || b === '') ? '' : b;
+
+          if (valA === '' && valB !== '') return -1;
+          if (valA !== '' && valB === '') return 1;
+          if (valA === '' && valB === '') return 0;
+
+          // Numeric sort for slide numbers
+          if (key === 'sourceSlidePageNumber' || key === 'targetSlidePageNumber') {
+            return parseFloat(valA) - parseFloat(valB);
+          }
+          return String(valA).localeCompare(String(valB));
+        });
+
+        // Add the (De)select All checkbox at the very top
+        const selectAllLabel = document.createElement('label');
+        selectAllLabel.innerHTML = '<input type="checkbox" class="select-all-toggle" data-column="' + key + '"> All';
+        innerDiv.appendChild(selectAllLabel);
+
+        const selectAllCheckbox = selectAllLabel.querySelector('input');
+        selectAllCheckbox.onchange = function (event) {
+          toggleSelectAll(event, key); // Pass column key
+        };
+
+        // Initialize activeFilters for this column: by default, all are selected
+        activeFilters[key].clear(); // Clear existing
+        sortedValues.forEach(value => activeFilters[key].add(String(value)));
+
+
+        sortedValues.forEach(value => {
+          const displayValue = (value === '' || value === null || value === undefined) ? '(Blank)' : value;
+          const checkboxId = "checkbox-" + key + "-" + value; // Unique ID for checkbox
+
+          const label = document.createElement('label');
+          label.innerHTML = "<input type=\"checkbox\" id=\"" + checkboxId + "\" data-column=\"" + key + "\" value=\"" + value + "\" onchange=\"filterTable()\"> " + displayValue;
+          innerDiv.appendChild(label);
+
+          const checkbox = label.querySelector('input');
+          // All are checked by default on initial population
+          checkbox.checked = true;
+        });
+
+        // Set initial state of "Select All" checkbox to true after all options are populated
+        selectAllCheckbox.checked = true;
+
+        // Add accessibility event listeners
+        dropdownContent.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            e.stopPropagation();
+            closeDropdownAndFocusButton(key);
+          }
+        });
+
+        dropdownContent.addEventListener('focusout', (e) => {
+          // If focus moves to an element not within this dropdown, close it.
+          if (!dropdownContent.contains(e.relatedTarget)) {
+            dropdownContent.style.display = 'none';
+            const button = document.querySelector(`.dropdown-button[data-column="${key}"]`);
+            if (button) button.setAttribute('aria-expanded', 'false');
+          }
+        });
+      });
     }
 
     /**
@@ -602,24 +644,24 @@ environment, please contact Green Duck Punch, LLC.
      * @param {string} columnKey The key of the column to toggle.
      */
     function toggleSelectAll(event, columnKey) {
-        const masterCheckbox = event.target;
-        const dropdownContent = dropdownContentCache[columnKey]; // Get from cache
-        const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
+      const masterCheckbox = event.target;
+      const dropdownContent = dropdownContentCache[columnKey]; // Get from cache
+      const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
 
-        if (masterCheckbox.checked) {
-            activeFilters[columnKey].clear(); // Clear existing filters
-            checkboxes.forEach(cb => {
-                cb.disabled = false;
-                cb.checked = true;
-                activeFilters[columnKey].add(cb.value);
-            });
-        } else {
-            activeFilters[columnKey].clear(); // Clear all filters for this column
-            checkboxes.forEach(cb => {
-                cb.checked = false;
-            });
-        }
-        filterTable(); // Re-apply filters
+      if (masterCheckbox.checked) {
+        activeFilters[columnKey].clear(); // Clear existing filters
+        checkboxes.forEach(cb => {
+          cb.disabled = false;
+          cb.checked = true;
+          activeFilters[columnKey].add(cb.value);
+        });
+      } else {
+        activeFilters[columnKey].clear(); // Clear all filters for this column
+        checkboxes.forEach(cb => {
+          cb.checked = false;
+        });
+      }
+      filterTable(); // Re-apply filters
     }
 
     /**
@@ -628,67 +670,67 @@ environment, please contact Green Duck Punch, LLC.
      * @param {string} columnKey The key of the column for which to toggle dropdown.
      */
     function toggleDropdown(event, columnKey) {
-        event.stopPropagation();
-        const dropdownContent = dropdownContentCache[columnKey]; // Get from cache
-        const dropdownButton = event.currentTarget; // The button that was clicked
+      event.stopPropagation();
+      const dropdownContent = dropdownContentCache[columnKey]; // Get from cache
+      const dropdownButton = event.currentTarget; // The button that was clicked
 
-        const wasOpen = dropdownContent.style.display === 'block';
+      const wasOpen = dropdownContent.style.display === 'block';
 
-        // Close all other dropdowns
-        document.querySelectorAll('.dropdown-content').forEach(content => {
-            content.style.display = 'none';
-        });
-        document.querySelectorAll('.dropdown-button').forEach(btn => {
-            btn.setAttribute('aria-expanded', 'false');
-        });
+      // Close all other dropdowns
+      document.querySelectorAll('.dropdown-content').forEach(content => {
+        content.style.display = 'none';
+      });
+      document.querySelectorAll('.dropdown-button').forEach(btn => {
+        btn.setAttribute('aria-expanded', 'false');
+      });
 
-        // If the clicked one was not open, then open it.
-        if (!wasOpen) {
-            dropdownButton.setAttribute('aria-expanded', 'true');
-            // Calculate position relative to the viewport
-            const rect = dropdownButton.getBoundingClientRect();
-            let dropdownLeft = rect.left;
-            dropdownContent.style.top = (rect.bottom + 5) + 'px'; // 5px buffer below the button
-            dropdownContent.style.display = 'block';
+      // If the clicked one was not open, then open it.
+      if (!wasOpen) {
+        dropdownButton.setAttribute('aria-expanded', 'true');
+        // Calculate position relative to the viewport
+        const rect = dropdownButton.getBoundingClientRect();
+        let dropdownLeft = rect.left;
+        dropdownContent.style.top = (rect.bottom + 5) + 'px'; // 5px buffer below the button
+        dropdownContent.style.display = 'block';
 
-            // Check for overflow and adjust the left position
-            const dropdownWidth = dropdownContent.offsetWidth;
-            const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        // Check for overflow and adjust the left position
+        const dropdownWidth = dropdownContent.offsetWidth;
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
 
-            if (dropdownLeft + dropdownWidth > viewportWidth) {
-                // Dropdown overflows, adjust position to be flush with the viewport right edge
-                dropdownLeft = viewportWidth - dropdownWidth;
-                dropdownLeft = Math.max(0, dropdownLeft); // Prevent it from overflowing the left edge
-            }
-
-            dropdownContent.style.left = dropdownLeft + 'px';
-
-           // Focus the first focusable item in the dropdown
-            const firstItem = dropdownContent.querySelector('button.dropdown-item, input[type="checkbox"]');
-            if (firstItem) {
-                firstItem.focus();
-            }
+        if (dropdownLeft + dropdownWidth > viewportWidth) {
+          // Dropdown overflows, adjust position to be flush with the viewport right edge
+          dropdownLeft = viewportWidth - dropdownWidth;
+          dropdownLeft = Math.max(0, dropdownLeft); // Prevent it from overflowing the left edge
         }
 
-       // Function to toggle mask based on scroll position
-        const toggleMask = () => {
-            // Check if the user has scrolled to the bottom
-            const isAtBottom = dropdownContent.scrollHeight - dropdownContent.scrollTop - dropdownContent.clientHeight < 1;
+        dropdownContent.style.left = dropdownLeft + 'px';
 
-            // Toggle the 'no-mask' class based on whether scrolling is needed and if we're at the bottom
-            if (isAtBottom) {
-                dropdownContent.classList.add('no-mask');
-            } else {
-                dropdownContent.classList.remove('no-mask');
-            }
-        };
+        // Focus the first focusable item in the dropdown
+        const firstItem = dropdownContent.querySelector('button.dropdown-item, input[type="checkbox"]');
+        if (firstItem) {
+          firstItem.focus();
+        }
+      }
 
-        // Call toggleMask initially and on scroll
-        setTimeout(() => {
-            toggleMask();
-            // Listen for scroll events to update the mask
-            dropdownContent.addEventListener('scroll', toggleMask);
-        }, 0);
+      // Function to toggle mask based on scroll position
+      const toggleMask = () => {
+        // Check if the user has scrolled to the bottom
+        const isAtBottom = dropdownContent.scrollHeight - dropdownContent.scrollTop - dropdownContent.clientHeight < 1;
+
+        // Toggle the 'no-mask' class based on whether scrolling is needed and if we're at the bottom
+        if (isAtBottom) {
+          dropdownContent.classList.add('no-mask');
+        } else {
+          dropdownContent.classList.remove('no-mask');
+        }
+      };
+
+      // Call toggleMask initially and on scroll
+      setTimeout(() => {
+        toggleMask();
+        // Listen for scroll events to update the mask
+        dropdownContent.addEventListener('scroll', toggleMask);
+      }, 0);
     }
 
     /**
@@ -696,135 +738,136 @@ environment, please contact Green Duck Punch, LLC.
      * @param {string} columnKey The key for the column's dropdown to close.
      */
     function closeDropdownAndFocusButton(columnKey) {
-        const dropdownContent = dropdownContentCache[columnKey];
-        const button = document.querySelector(`.dropdown-button[data-column="${columnKey}"]`);
+      const dropdownContent = dropdownContentCache[columnKey];
+      const button = document.querySelector(`.dropdown-button[data-column="${columnKey}"]`);
 
-        if (dropdownContent) dropdownContent.style.display = 'none';
-        if (button) button.setAttribute('aria-expanded', 'false');
-        if (button) button.focus();
+      if (dropdownContent) dropdownContent.style.display = 'none';
+      if (button) button.setAttribute('aria-expanded', 'false');
+      if (button) button.focus();
     }
 
     /**
      * Filters the table data based on selected dropdown values.
      */
     function filterTable() {
-        // Update active filters based on current checkbox states
-        const columnKeys = ['sourceSlidePageNumber', 'targetPresentationName', 'targetSlidePageNumber'];
-        columnKeys.forEach(key => {
-            activeFilters[key].clear(); // Clear current selections for this column
-            const dropdownContent = dropdownContentCache[key]; // Get from cache
-            if (dropdownContent) { // Ensure dropdownContent exists before querying
-              dropdownContent.querySelectorAll('input[type="checkbox"]:checked:not(.select-all-toggle)').forEach(checkbox => {
-                  activeFilters[key].add(checkbox.value);
-              });
-              // Update the state of the master "Select All" checkbox
-              const selectAllCheckbox = dropdownContent.querySelector('.select-all-toggle');
-              const allColumnCheckboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
-              if (!selectAllCheckbox) return;
-              
-              // If the number of checked boxes (excluding master) matches total, it's "all selected"
-              selectAllCheckbox.checked = (activeFilters[key].size === allColumnCheckboxes.length);
+      // Update active filters based on current checkbox states
+      const columnKeys = ['sourceSlidePageNumber', 'targetPresentationName', 'targetSlidePageNumber'];
+      columnKeys.forEach(key => {
+        activeFilters[key].clear(); // Clear current selections for this column
+        const dropdownContent = dropdownContentCache[key]; // Get from cache
+        if (dropdownContent) { // Ensure dropdownContent exists before querying
+          dropdownContent.querySelectorAll('input[type="checkbox"]:checked:not(.select-all-toggle)').forEach(checkbox => {
+            activeFilters[key].add(checkbox.value);
+          });
+          // Update the state of the master "Select All" checkbox
+          const selectAllCheckbox = dropdownContent.querySelector('.select-all-toggle');
+          const allColumnCheckboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
+          if (!selectAllCheckbox) return;
 
-              // Update the filterable/filtered icon visibility
-              const dropdownButton = document.querySelector(`.dropdown-button[data-column="${key}"]`);
-              if (!dropdownButton) return;
+          // If the number of checked boxes (excluding master) matches total, it's "all selected"
+          selectAllCheckbox.checked = (activeFilters[key].size === allColumnCheckboxes.length);
 
-              const filterableIcon = dropdownButton.querySelector('.filterable-icon');
-              const filteredIcon = dropdownButton.querySelector('.filtered-icon');
+          // Update the filterable/filtered icon visibility
+          const dropdownButton = document.querySelector(`.dropdown-button[data-column="${key}"]`);
+          if (!dropdownButton) return;
 
-              if (!filterableIcon || !filteredIcon) return;
+          const filterableIcon = dropdownButton.querySelector('.filterable-icon');
+          const filteredIcon = dropdownButton.querySelector('.filtered-icon');
 
-              if (selectAllCheckbox.checked) {
-                  filterableIcon.classList.remove('hidden');
-                  filteredIcon.classList.add('hidden');
-              } else {
-                  filterableIcon.classList.add('hidden');
-                  filteredIcon.classList.remove('hidden');
-            }
+          if (!filterableIcon || !filteredIcon) return;
+
+          if (selectAllCheckbox.checked) {
+            filterableIcon.classList.remove('hidden');
+            filteredIcon.classList.add('hidden');
+          } else {
+            filterableIcon.classList.add('hidden');
+            filteredIcon.classList.remove('hidden');
           }
-        });
+        }
+      });
 
-        // Filter data based on active filters
-        let filteredData = originalTableData.filter(row => {
-            return columnKeys.every(key => {
-                // A row passes the filter for a column if its value is in the activeFilters set for that column.
-                // If activeFilters[key] is empty, it means no items are selected for that filter,
-                // so no rows should be displayed for that column's filter criteria.
-                if (activeFilters[key].size === 0) {
-                    return false; // If nothing is selected in the filter, no row passes this column's filter
-                }
-                return activeFilters[key].has(String(row[key])); // Ensure comparison is string to string
-            });
+      // Filter data based on active filters
+      let filteredData = originalTableData.filter(row => {
+        return columnKeys.every(key => {
+          // A row passes the filter for a column if its value is in the activeFilters set for that column.
+          // If activeFilters[key] is empty, it means no items are selected for that filter,
+          // so no rows should be displayed for that column's filter criteria.
+          if (activeFilters[key].size === 0) {
+            return false; // If nothing is selected in the filter, no row passes this column's filter
+          }
+          return activeFilters[key].has(String(row[key])); // Ensure comparison is string to string
         });
+      });
 
-        tableData = filteredData; // Update the data being displayed/sorted
-        renderTable(); // Re-render the filtered data
+      tableData = filteredData; // Update the data being displayed/sorted
+      renderTable(); // Re-render the filtered data
     }
 
     // Close dropdowns when clicking outside
-    window.onclick = function(event) {
-        if (!event.target.closest('.dropdown-button') && !event.target.closest('.dropdown-content')) {
-            document.querySelectorAll('.dropdown-content').forEach(content => {
-                content.style.display = 'none';
-            });
-            document.querySelectorAll('.dropdown-button').forEach(btn => {
-                btn.setAttribute('aria-expanded', 'false');
-            });
-        }
+    window.onclick = function (event) {
+      if (!event.target.closest('.dropdown-button') && !event.target.closest('.dropdown-content')) {
+        document.querySelectorAll('.dropdown-content').forEach(content => {
+          content.style.display = 'none';
+        });
+        document.querySelectorAll('.dropdown-button').forEach(btn => {
+          btn.setAttribute('aria-expanded', 'false');
+        });
+      }
     };
 
     function findLinkedSlides() {
-        const newSearchButton = document.getElementById('find-linked-slides');
-        newSearchButton.disabled = true;
-        google.script.run
-            .withSuccessHandler(err => {
-              newSearchButton.disabled = false;
-            })
-            .withFailureHandler(err => {
-              newSearchButton.disabled = false;
-              console.error('findLinkedSlides() failed:', err);
-            })
-            .findLinkedSlides();
+      const newSearchButton = document.getElementById('find-linked-slides');
+      newSearchButton.disabled = true;
+      google.script.run
+        .withSuccessHandler(err => {
+          newSearchButton.disabled = false;
+        })
+        .withFailureHandler(err => {
+          newSearchButton.disabled = false;
+          console.error('findLinkedSlides() failed:', err);
+        })
+        .findLinkedSlides();
     }
 
     // Initial setup
     document.addEventListener('DOMContentLoaded', (event) => {
-        if (searchTimestampString && searchTimestampString !== 'undefined' && searchTimestampString !== '') {
-            const timestampEl = document.getElementById('results-timestamp-message');
-            if (timestampEl) {
-                try {
-                    const date = new Date(searchTimestampString);
-                    // Format to user's local date and time, e.g., "Jun 29, 2025, 4:30 PM"
-                    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
-                    const formattedDateTime = date.toLocaleString([], options);
-                    timestampEl.textContent = `as of ${formattedDateTime}`;
-                } catch (e) {
-                    console.error("Could not parse or format timestamp:", e);
-                    // Fallback to default message is implicit as we don't change the textContent on error
-                }
-            }
+      if (searchTimestampString && searchTimestampString !== 'undefined' && searchTimestampString !== '') {
+        const timestampEl = document.getElementById('results-timestamp-message');
+        if (timestampEl) {
+          try {
+            const date = new Date(searchTimestampString);
+            // Format to user's local date and time, e.g., "Jun 29, 2025, 4:30 PM"
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+            const formattedDateTime = date.toLocaleString([], options);
+            timestampEl.textContent = `as of ${formattedDateTime}`;
+          } catch (e) {
+            console.error("Could not parse or format timestamp:", e);
+            // Fallback to default message is implicit as we don't change the textContent on error
+          }
         }
+      }
 
-        populateFilterDropdowns(); // Populate dropdowns first
+      populateFilterDropdowns(); // Populate dropdowns first
 
-        // Attach event listeners and ARIA attributes to dropdown buttons
-        document.querySelectorAll('.dropdown-button').forEach(button => {
-            const columnKey = button.dataset.column;
-            button.setAttribute('aria-haspopup', 'true');
-            button.setAttribute('aria-expanded', 'false');
-            button.setAttribute('aria-controls', `filter-${columnKey}`);
+      // Attach event listeners and ARIA attributes to dropdown buttons
+      document.querySelectorAll('.dropdown-button').forEach(button => {
+        const columnKey = button.dataset.column;
+        button.setAttribute('aria-haspopup', 'true');
+        button.setAttribute('aria-expanded', 'false');
+        button.setAttribute('aria-controls', `filter-${columnKey}`);
 
-            button.addEventListener('click', function(event) {
-                toggleDropdown(event, columnKey);
-            });
+        button.addEventListener('click', function (event) {
+          toggleDropdown(event, columnKey);
         });
+      });
 
-        const compactModeCheckbox = document.getElementById('compact-mode-checkbox');
-        compactModeCheckbox.addEventListener('change', toggleCompactMode);
+      const compactModeCheckbox = document.getElementById('compact-mode-checkbox');
+      compactModeCheckbox.addEventListener('change', toggleCompactMode);
 
-        // Initial sort and render when the dialog loads
-        sortTable('sourceSlidePageNumber', 'asc');
+      // Initial sort and render when the dialog loads
+      sortTable('sourceSlidePageNumber', 'asc');
     });
   </script>
 </body>
+
 </html>

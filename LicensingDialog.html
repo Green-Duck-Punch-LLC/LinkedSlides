@@ -29,58 +29,67 @@ environment, please contact Green Duck Punch, LLC.
     <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
     <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
     <style>
-    body {
-        padding: 20px;
-        text-align: center;
-    }
-    .button-container {
-        margin-top: 20px;
-    }
-    #terms-checkbox-container {
-        display: flex;
-        align-items: first;
-        justify-content: center;
-        margin-bottom: 20px;
-    }
-    #terms-checkbox {
-        margin-right: 10px;
-    }
-    #terms-checkbox-container label {
-        text-align: left;
-    }
-    #price-preview {
-        font-size: large;
-    }
-    #thank-you-container {
-        font-size: 20px;
-        display: none
-    }
+        body {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .button-container {
+            margin-top: 20px;
+        }
+
+        #terms-checkbox-container {
+            display: flex;
+            align-items: first;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        #terms-checkbox {
+            margin-right: 10px;
+        }
+
+        #terms-checkbox-container label {
+            text-align: left;
+        }
+
+        #price-preview {
+            font-size: large;
+        }
+
+        #thank-you-container {
+            font-size: 20px;
+            display: none
+        }
     </style>
 </head>
 
 <body onload="initializePaddle()">
     <div id="purchase-prompt-container">
-    <div id="price-preview"></div>
-    <div id="terms-checkbox-container">
-        <input type="checkbox" id="terms-checkbox">
-        <label for="terms-checkbox">
-            I understand that my subscription will only work with my <?= userEmail ?> account and I agree to the
-            <a href="https://www.greenduckpunch.com/terms" target="_blank">Terms of Service</a> and
-            <a href="https://www.greenduckpunch.com/privacy" target="_blank">Privacy Policy</a>
-            of Green Duck Punch, LLC.
-        </label>
-    </div>
+        <div id="price-preview"></div>
+        <div id="terms-checkbox-container">
+            <input type="checkbox" id="terms-checkbox">
+            <label for="terms-checkbox">
+                I understand that my subscription will only work with my
+                <?= userEmail ?> account and I agree to the
+                <a href="https://www.greenduckpunch.com/terms" target="_blank">Terms of Service</a> and
+                <a href="https://www.greenduckpunch.com/privacy" target="_blank">Privacy Policy</a>
+                of Green Duck Punch, LLC.
+            </label>
+        </div>
 
-    <div class="button-container">
-        <button onclick="openCheckout()" class="action" id="purchase-button" disabled>Checkout</button>
-        <button onclick="google.script.host.close()">Close</button>
-    </div>
-    <div>
-        <p>Note: You will be able to cancel your subscription via the cancellation link in the confirmation email you receive after checking out.</p>
-    </div>
+        <div class="button-container">
+            <button onclick="openCheckout()" class="action" id="purchase-button" disabled>Checkout</button>
+            <button onclick="google.script.host.close()">Close</button>
+        </div>
+        <div>
+            <p>Note: You will be able to cancel your subscription via the cancellation link in the confirmation email
+                you receive after checking out.</p>
+        </div>
     </div>
     <div id="thank-you-container">
-        <p><b>Thank you for subscribing!</b></p><button onclick="findLinkedSlides()" class="action">Find Linked Slides</button>
+        <p><b>Thank you for subscribing!</b></p><button onclick="findLinkedSlides()" class="action">Find Linked
+            Slides</button>
     </div>
     <script>
         const termsCheckbox = document.getElementById('terms-checkbox');
@@ -93,7 +102,7 @@ environment, please contact Green Duck Punch, LLC.
         termsCheckbox.addEventListener('change', function () {
             purchaseButton.disabled = !this.checked;
         });
-        
+
         function findLinkedSlides() {
             google.script.run.findLinkedSlides();
             google.script.host.close();
@@ -111,17 +120,17 @@ environment, please contact Green Duck Punch, LLC.
         }
         function initializePaddle() {
             Paddle.Environment.set('<?= config.PADDLE_ENVIRONMENT ?>');
-            Paddle.Initialize({ 
+            Paddle.Initialize({
                 token: '<?= config.PADDLE_FRONTEND_TOKEN ?>',
-                eventCallback: handlePaddleEvent 
+                eventCallback: handlePaddleEvent
             });
             getPricePreview();
         }
 
         let items = [{
-                    quantity: 1,
-                    priceId: '<?= config.PADDLE_INDIVIDUAL_PRICE_ID ?>',
-                }];
+            quantity: 1,
+            priceId: '<?= config.PADDLE_INDIVIDUAL_PRICE_ID ?>',
+        }];
         let customer = {
             email: '<?= userEmail ?>'
         };

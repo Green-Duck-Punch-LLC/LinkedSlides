@@ -22,6 +22,7 @@
   environment, please contact Green Duck Punch, LLC.
   -->
 <html>
+
 <head>
   <base target="_top">
   <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
@@ -30,6 +31,7 @@
       --bg-color: #f7fafc;
       --text-color: #222;
     }
+
     body {
       background-color: var(--bg-color);
       padding: 1rem;
@@ -50,7 +52,7 @@
       box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       display: flex;
       flex-direction: column;
-      max-height: 85vh; /* Ensure dialog doesn't exceed viewport height */
+      max-height: 85vh;
     }
 
     #message {
@@ -61,7 +63,7 @@
       align-self: center;
       text-align: left;
     }
-    
+
     .message-info {
       background-color: #e0f2fe;
       border: 1px solid #90cdf4;
@@ -78,14 +80,14 @@
 
     #selection-view {
       width: 100%;
-      flex-grow: 1; /* Allow this section to grow and fill space */
+      flex-grow: 1;
       display: flex;
       flex-direction: column;
-      overflow: hidden; /* Contain the scrolling of the child table wrapper */
+      overflow: hidden;
     }
 
     #selection-view:focus {
-      outline: 2px solid #4d90fe; /* A standard Google-blue focus ring */
+      outline: 2px solid #4d90fe;
       outline-offset: 2px;
     }
 
@@ -93,7 +95,7 @@
       display: flex;
       flex-direction: column;
       flex-grow: 1;
-      overflow: hidden; /* This is important for the flex layout to work correctly with a scrolling child */
+      overflow: hidden;
     }
 
     #table-scroll-wrapper {
@@ -111,32 +113,39 @@
     #selection-view table {
       min-width: 100%;
       border: 1px;
-      & > :not(:last-child), & > tbody > :not(:last-child) {
+
+      &> :not(:last-child),
+      &>tbody> :not(:last-child) {
         border-top-width: 0px;
         border-bottom-width: 1px;
         border-color: oklab(from var(--bg-color) calc(l * 0.2) a b);
       }
 
       & thead {
-        background-color: oklab(from var(--bg-color) calc(l * 0.05) a b);;
+        background-color: oklab(from var(--bg-color) calc(l * 0.05) a b);
         color: oklab(from var(--text-color) 1 a b);
-        position: sticky; /* Make the header sticky */
-        top: 0;           /* Stick to the top of the scrolling container */
-        z-index: 1;       /* Ensure it stays above the scrolling body */
+        position: sticky;
+        top: 0;
+        z-index: 1;
       }
-      & th, & td {
+
+      & th,
+      & td {
         padding: 0.75rem 1.5rem;
         text-align: left;
       }
+
       & th {
         text-transform: uppercase;
       }
+
       & td.trashed {
         color: red;
       }
     }
 
-    #selection-view table th.action-col, #selection-view table td.action-col {
+    #selection-view table th.action-col,
+    #selection-view table td.action-col {
       width: 1%;
       white-space: nowrap;
       text-align: center;
@@ -145,17 +154,19 @@
     #selection-view table td button.remove-btn {
       min-width: unset;
     }
+
     .wait {
       cursor: wait;
     }
 
     #dialog-actions {
       margin-top: 1.5rem;
-      flex-shrink: 0; /* Prevent this container from shrinking */
+      flex-shrink: 0;
       text-align: left;
     }
   </style>
 </head>
+
 <body>
   <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
 
@@ -201,7 +212,7 @@
      * @param {string} msg The message to display.
      * @param {string} type The type of message ('info' or 'error').
      */
-     function showMessage(msg, type = 'info') {
+    function showMessage(msg, type = 'info') {
       const messageDiv = document.getElementById('message');
       messageDiv.textContent = msg;
       messageDiv.className = `${type} message-${type}`;
@@ -212,7 +223,7 @@
      * @param {string} msgs The messages to display.
      * @param {string} type The type of messages ('info' or 'error').
      */
-     function showMessages(msgs, type = 'info') {
+    function showMessages(msgs, type = 'info') {
       if (msgs.length == 1) {
         showMessage(msgs[0], type);
         return;
@@ -244,14 +255,14 @@
     function onClientLoad() {
       gapi.client.init({
         // No explicit API key needed when using OAuth token directly for Picker
-      }).then(function() {
+      }).then(function () {
         // Set the OAuth token for gapi.client
         gapi.auth.setToken({
           access_token: OAUTH_TOKEN
         });
         // Now that gapi.client is initialized and authenticated, load the Picker API
         gapi.load('picker', { callback: onPickerApiReady });
-      }, function(error) {
+      }, function (error) {
         console.error("Error initializing gapi client:", error);
         showMessage("Error initializing Google APIs. Please check your browser console for details.", 'error');
       });
@@ -295,30 +306,30 @@
 
       // Create a Docs view for My Drive, showing presentations and folders (default behavior)
       const myDriveView = new google.picker.DocsView(google.picker.ViewId.DOCS)
-          .setIncludeFolders(true)
-          .setMode(google.picker.DocsViewMode.LIST)
-          .setParent('root')
-          .setMimeTypes(visibleMimeTypes); // Filter what is displayed
+        .setIncludeFolders(true)
+        .setMode(google.picker.DocsViewMode.LIST)
+        .setParent('root')
+        .setMimeTypes(visibleMimeTypes); // Filter what is displayed
 
       // Create another Docs view specifically for Shared Drives, showing presentations and folders
       const sharedDrivesView = new google.picker.DocsView(google.picker.ViewId.DOCS)
-          .setIncludeFolders(true)
-          .setMode(google.picker.DocsViewMode.LIST)
-          .setMimeTypes(visibleMimeTypes) // Filter what is displayed
-          .setEnableDrives(true); // Enable Shared Drives for this specific view
+        .setIncludeFolders(true)
+        .setMode(google.picker.DocsViewMode.LIST)
+        .setMimeTypes(visibleMimeTypes) // Filter what is displayed
+        .setEnableDrives(true); // Enable Shared Drives for this specific view
 
       // Build the picker
       picker = new google.picker.PickerBuilder()
-          .addView(myDriveView) // Add My Drive browsing
-          .addView(sharedDrivesView) // Add Shared Drives browsing
-          .enableFeature(google.picker.Feature.MULTISELECT_ENABLED) // Correct method for multi-selection
-          // setSelectableMimeTypes ensures only presentations can be selected, even if folders are visible
-          .setSelectableMimeTypes(presentationMimeType)
-          .setOAuthToken(gapi.auth.getToken().access_token) // Set the OAuth token for authentication
-          .setCallback(pickerCallback) // Set the callback function for when selections are made
-          .setOrigin(google.script.host.origin) // CRUCIAL FIX: Use google.script.host.origin
-          .setSize(566,350) // Minimum size, to prevent scrolling
-          .build();
+        .addView(myDriveView) // Add My Drive browsing
+        .addView(sharedDrivesView) // Add Shared Drives browsing
+        .enableFeature(google.picker.Feature.MULTISELECT_ENABLED) // Correct method for multi-selection
+        // setSelectableMimeTypes ensures only presentations can be selected, even if folders are visible
+        .setSelectableMimeTypes(presentationMimeType)
+        .setOAuthToken(gapi.auth.getToken().access_token) // Set the OAuth token for authentication
+        .setCallback(pickerCallback) // Set the callback function for when selections are made
+        .setOrigin(google.script.host.origin) // CRUCIAL FIX: Use google.script.host.origin
+        .setSize(566, 350) // Minimum size, to prevent scrolling
+        .build();
 
       picker.setVisible(true); // Display the picker dialog
     }
@@ -336,7 +347,7 @@
         tableWrapper.classList.remove('is-scrolling');
         return;
       }
-      
+
       // A small buffer is used to account for potential floating point inaccuracies.
       const isAtBottom = tableWrapper.scrollHeight - tableWrapper.scrollTop - tableWrapper.clientHeight < 1;
 
@@ -417,21 +428,21 @@
           let msgs = [];
           files.forEach(file => {
             selectedFiles.set(file.id, file);
-            if (file.trashed) 
+            if (file.trashed)
               msgs.push(`"${file.name}" is currently in the trash.`);
           });
 
           // If some files couldn't be loaded (e.g., deleted or permissions changed),
           // inform the user.
           if (files.length < fileIds.length) {
-              const missingCount = fileIds.length - files.length;
-              const noun = missingCount === 1 ? 'file' : 'files';
-              msgs.push(`Could not load ${missingCount} ${noun}, perhaps due to removal or permissions.`);
+            const missingCount = fileIds.length - files.length;
+            const noun = missingCount === 1 ? 'file' : 'files';
+            msgs.push(`Could not load ${missingCount} ${noun}, perhaps due to removal or permissions.`);
           }
           if (msgs.length > 0) {
-              showMessages(msgs, 'error');
+            showMessages(msgs, 'error');
           } else {
-              hideMessage();
+            hideMessage();
           }
 
           renderSelectedFilesTable();
@@ -459,8 +470,8 @@
       const filesIdsToSave = JSON.stringify(Array.from(selectedFiles.keys()));
       google.script.run
         .withFailureHandler(err => {
-            console.error("Failed to save file list:", err);
-            showMessage("Could not save file selection. Changes may not be remembered.", 'error');
+          console.error("Failed to save file list:", err);
+          showMessage("Could not save file selection. Changes may not be remembered.", 'error');
         })
         ._saveSelectedFiles(filesIdsToSave);
     }
@@ -488,7 +499,7 @@
         if (docs.length === 0) {
           // If the initial picker is closed without selection, close the dialog.
           if (selectedFiles.size === 0) {
-              google.script.host.close();
+            google.script.host.close();
           }
           return; // Otherwise, just do nothing if no new files were picked.
         }
@@ -568,8 +579,8 @@
           document.getElementById('start-search-btn').disabled = false;
         })
         ._performLinkedSlideSearch(presentationIds);
-        google.script.host.close();
-      }
+      google.script.host.close();
+    }
 
     // Initial setup on DOM content loaded
     document.addEventListener('DOMContentLoaded', () => {
@@ -595,4 +606,5 @@
     });
   </script>
 </body>
+
 </html>

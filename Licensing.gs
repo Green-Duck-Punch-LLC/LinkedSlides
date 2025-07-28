@@ -55,7 +55,7 @@ function _getLicensingConfig() {
     PADDLE_BULK_PRODUCT_ID: propsObj['PADDLE_BULK_PRODUCT_ID'],
     // The URL for the checkout page, pre-configured in Paddle.
     PADDLE_CHECKOUT_URL: propsObj['PADDLE_CHECKOUT_URL'],
-  
+
     // --- Behavior Configuration ---
     // Trial period in seconds for new users. Default is 7 days (604800 seconds).
     TRIAL_PERIOD_SECONDS: parseInt(propsObj['TRIAL_PERIOD_SECONDS'] || '604800', 10),
@@ -116,8 +116,8 @@ function _isUserLicensed(userEmail) {
     return { licensed: true };
   }
 
-   // 3. Check with Paddle or RevenueCat
-   try {
+  // 3. Check with Paddle or RevenueCat
+  try {
     if (_checkForLicense(userEmail)) {
       // Cache the positive result.
       userCache.put('is_licensed', 'true', config.LICENSED_USER_CACHE_EXPIRATION_SECONDS);
@@ -223,7 +223,7 @@ function _checkPaddleLicense(userEmail) {
  */
 function _findIndividualSubscription(email) {
   const config = _getLicensingConfig();
-  
+
   // Find customer by email
   const customerResponse = _paddleApiRequest(`/customers?email=${encodeURIComponent(email)}`);
   if (!customerResponse || customerResponse.data.length === 0) {
@@ -238,7 +238,7 @@ function _findIndividualSubscription(email) {
   }
 
   // Check if any of the active subscriptions are for our product
-  return subsResponse.data.some(sub => 
+  return subsResponse.data.some(sub =>
     sub.items.some(item => item.price && item.price.product_id === config.PADDLE_INDIVIDUAL_PRODUCT_ID)
   );
 }
@@ -262,7 +262,7 @@ function _findAndClaimBulkLicense(userEmail) {
   }
 
   for (const subId of subscriptionIds) {
-    const lock = LockService.getScriptLock();    
+    const lock = LockService.getScriptLock();
     try {
       if (!lock.tryLock(config.LOCK_TIMEOUT_MS)) {
         consoleWarn_(`Could not acquire lock for subId ${subId} and user ${userEmail} within ${config.LOCK_TIMEOUT_MS} ms. Considering user licensed.`);
@@ -271,30 +271,30 @@ function _findAndClaimBulkLicense(userEmail) {
       }
 
       // If we got the lock, proceed with the license check
-        const subResponse = _paddleApiRequest(`/subscriptions/${subId}`);
-        const subscription = subResponse.data;
+      const subResponse = _paddleApiRequest(`/subscriptions/${subId}`);
+      const subscription = subResponse.data;
 
-        if (!['active', 'trialing'].includes(subscription.status)) continue;
+      if (!['active', 'trialing'].includes(subscription.status)) continue;
 
-        const customData = subscription.custom_data || {};
-        let licensedUsers = customData.licensed_users || [];
+      const customData = subscription.custom_data || {};
+      let licensedUsers = customData.licensed_users || [];
 
-        if (licensedUsers.map(u => u.toLowerCase()).includes(userEmail.toLowerCase())) {
-          return true; // Found existing license.
-        }
+      if (licensedUsers.map(u => u.toLowerCase()).includes(userEmail.toLowerCase())) {
+        return true; // Found existing license.
+      }
 
-        // Calculate license limit by summing quantities of items matching the bulk product ID.
-        const licenseLimit = subscription.items
-          .filter(item => item.price && item.price.product_id === config.PADDLE_BULK_PRODUCT_ID)
-          .reduce((total, item) => total + item.quantity, 0);
+      // Calculate license limit by summing quantities of items matching the bulk product ID.
+      const licenseLimit = subscription.items
+        .filter(item => item.price && item.price.product_id === config.PADDLE_BULK_PRODUCT_ID)
+        .reduce((total, item) => total + item.quantity, 0);
 
-        // Ensure licensedUsers is an array before pushing
-        if (!Array.isArray(licensedUsers)) {
-          licensedUsers = [];
-        }
+      // Ensure licensedUsers is an array before pushing
+      if (!Array.isArray(licensedUsers)) {
+        licensedUsers = [];
+      }
 
-        // Ensure no duplicates after update.
-        licensedUsers = [...new Set(licensedUsers)];
+      // Ensure no duplicates after update.
+      licensedUsers = [...new Set(licensedUsers)];
 
       if (licensedUsers.length < licenseLimit) {
         const updatedUsers = [...licensedUsers, userEmail];
@@ -309,7 +309,7 @@ function _findAndClaimBulkLicense(userEmail) {
     } finally {
       if (lock.hasLock()) lock.releaseLock(); // Release only if we actually acquired it
     }
-  
+
   }
 
   return false;
@@ -336,7 +336,7 @@ function _getBulkLicenseDomainMap() {
 
   while (hasMore) {
     const response = _paddleApiRequest(nextUrl);
-    
+
     response.data.forEach(sub => {
       const customData = sub.custom_data;
       if (customData && customData.allowed_domains) {

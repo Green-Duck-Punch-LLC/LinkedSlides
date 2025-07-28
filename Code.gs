@@ -43,10 +43,10 @@
  */
 function onOpen() {
   SlidesApp.getUi()
-      .createAddonMenu() // Appropriate for Google Workspace Add-on deployment
-      .addItem('Find linked copies', 'launchLinkedSlides')
-      .addItem('Contact support', 'showContactSupportDialog')
-      .addToUi();
+    .createAddonMenu() // Appropriate for Google Workspace Add-on deployment
+    .addItem('Find linked copies', 'launchLinkedSlides')
+    .addItem('Contact support', 'showContactSupportDialog')
+    .addToUi();
 }
 
 /**
@@ -105,14 +105,14 @@ function findLinkedSlides() {
   template.oauthToken = oauthToken; // Pass the token to the template
   // Pass the saved files (or an empty array string) to the template.
   template.initialFileIdsJson = initialFileIdsJson || '[]';
-  
+
   // Evaluate the template to get the final HTML output.
   // Set the title, dimensions, and sandbox mode for the dialog.
   const htmlOutput = template.evaluate()
-      .setTitle('Find Linked Slides')
-      .setWidth(1000) // Increased width to better accommodate the Picker
-      .setHeight(600)  // Increased height to better accommodate the Picker
-      .setSandboxMode(HtmlService.SandboxMode.IFRAME); // IFRAME mode is recommended for security
+    .setTitle('Find Linked Slides')
+    .setWidth(1000) // Increased width to better accommodate the Picker
+    .setHeight(600)  // Increased height to better accommodate the Picker
+    .setSandboxMode(HtmlService.SandboxMode.IFRAME); // IFRAME mode is recommended for security
 
   // Display the dialog.
   SlidesApp.getUi().showModalDialog(htmlOutput, 'Find Linked Slides');
@@ -137,9 +137,9 @@ function _performLinkedSlideSearch(presentationIdsString) {
       return;
     }
     try {
-      userCache.put(isSearchingKey, 'true', 5*60); //Prevent overlapping searches for 5 minutes
+      userCache.put(isSearchingKey, 'true', 5 * 60); //Prevent overlapping searches for 5 minutes
       const resultsHtml = generateSearchResults_(presentationIdsString);
-      ui.showSidebar(resultsHtml);  
+      ui.showSidebar(resultsHtml);
     } finally {
       userCache.remove(isSearchingKey);
     }
@@ -172,7 +172,7 @@ function generateSearchResults_(presentationIdsString) {
       foundLink: false // Flag to track if a link is found
     };
     // Get the unformatted text associated with the first placeholder on the slide
-    const titlePh = slide.getPlaceholder(SlidesApp.PlaceholderType.CENTERED_TITLE) 
+    const titlePh = slide.getPlaceholder(SlidesApp.PlaceholderType.CENTERED_TITLE)
       || slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
     const title = titlePh?.asShape()?.getText()?.asRenderedString();
     allSourceSlidesMap[slideId].title = title;
@@ -182,8 +182,8 @@ function generateSearchResults_(presentationIdsString) {
 
   // Parse the input string of presentation IDs.
   const targetPresentationIds = presentationIdsString.split(',')
-                                  .map(id => id.trim())
-                                  .filter(id => id.length > 0);
+    .map(id => id.trim())
+    .filter(id => id.length > 0);
 
   const errors = []; // Stores errors encountered while accessing presentations
 
@@ -255,7 +255,7 @@ function generateSearchResults_(presentationIdsString) {
 
   // Evaluate the template and display the sidebar
   const resultHtmlOutput = resultTemplate.evaluate()
-      .setTitle(dialogTitle);
+    .setTitle(dialogTitle);
   return resultHtmlOutput;
 }
 
@@ -351,7 +351,7 @@ function _getFileDetailsForIds(fileIds) {
     if (file.error)
       consoleError_(`Error retrieving details for file`, file.error);
     else if (file.parents && file.parents.length > 0 && file.parents[0] != file.driveId)
-      parentNameMap[file.parents[0]]= 'Unknown Folder';
+      parentNameMap[file.parents[0]] = 'Unknown Folder';
     else if (file.driveId) {
       parentNameMap[file.driveId] = 'Unknown Shared Drive'
     }
@@ -362,12 +362,12 @@ function _getFileDetailsForIds(fileIds) {
       parentRequests.push({
         method: "GET",
         endpoint: `${driveApiBaseUrl}/drives/${id}?fields=id,name`
-      });  
+      });
     } else {
       parentRequests.push({
         method: "GET",
         endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name`
-      });  
+      });
     }
   });
   const parentResponses = EDo({
