@@ -54,9 +54,13 @@ environment, please contact Green Duck Punch, LLC.
       margin: 1rem 0;
     }
     #container table {
+      table-layout: fixed;
       width: 100%;
       border: 1px solid #ebebeb;
       border-collapse: collapse;
+      &.compact .source-slide-cell {
+        white-space: nowrap;
+      }
       & > :not(:last-child), & > tbody > :not(:last-child) {
         border-top-width: 0px;
         border-bottom: 1px solid #ebebeb;
@@ -64,6 +68,11 @@ environment, please contact Green Duck Punch, LLC.
       & th, & td {
         padding: 0.5rem 0;
         text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        &.source-slide-cell:hover {
+          white-space: unset;
+        }
       }
       & th {
         padding-bottom: 0;
@@ -200,6 +209,7 @@ environment, please contact Green Duck Punch, LLC.
           <? }); ?>
         </ul>
       </div>
+    <? } ?>
     <p class="gray">
     <? if (anyLinkedResults){ ?>
       The following slide(s) were involved in linking relationships
@@ -208,7 +218,6 @@ environment, please contact Green Duck Punch, LLC.
     <? } ?>
         <span id="results-timestamp-message"></span>.
     </p>
-    <? } ?>
     <svg style="display: none">
       <defs>
         <symbol id="filterable-icon" viewBox="0 0 12.7 12.7" stroke="currentColor" fill="currentColor">
@@ -222,6 +231,7 @@ environment, please contact Green Duck Punch, LLC.
       </defs>      
     </svg>
 
+    <label><input type="checkbox" id="compact-mode-checkbox">Show abbreviated titles</label>
     <table>
       <thead>
         <tr class="super-header">
@@ -297,6 +307,34 @@ environment, please contact Green Duck Punch, LLC.
     }
 
     /**
+     * Creates an anchor element with the given attributes and text.
+     * @param {string} url The URL for the link.
+     * @param {string} target The target attribute for the link.
+     * @param {string} text The text content of the link.
+     * @param {string} onclick The onclick handler for the link.
+     * @returns {HTMLAnchorElement} The created anchor element.
+     */
+    function createLink(url, target, text, onclick) {
+      const aNode = document.createElement('a');
+      aNode.setAttribute('href', url);
+      if (onclick) aNode.setAttribute('onclick', onclick);
+      aNode.setAttribute('target', target);
+      aNode.textContent = text;
+      return aNode;
+    }
+
+    function toggleCompactMode() {
+      const compactModeCheckbox = document.getElementById('compact-mode-checkbox');
+      const table = document.querySelector('#container table');
+
+      if (compactModeCheckbox.checked) {
+        table.classList.add('compact');
+      } else {
+        table.classList.remove('compact');
+      }
+    }
+
+    /**
      * Renders the table body based on the current tableData.
      */
     function renderTable() {
@@ -307,18 +345,26 @@ environment, please contact Green Duck Punch, LLC.
             const row = tbody.insertRow();
             // Source Slide # (with link to source slide if applicable)
             const sourceSlideCell = row.insertCell();
+            sourceSlideCell.classList.add('source-slide-cell');
+            let sourceSlideCellText = `${rowData.sourceSlidePageNumber}`;
+            if (rowData.sourceSlideTitle) {
+              sourceSlideCellText += `: ${rowData.sourceSlideTitle}`;
+            }
             if (rowData.sourceSlideId) { // Check if sourceSlideId exists for linking
                 const slideUrl = "https://docs.google.com/presentation/d/" + activePresentationId + "/edit#slide=id." + rowData.sourceSlideId;
-                // The href is for right-click > open in new tab functionality, while onclick handles the in-app navigation.
-                sourceSlideCell.innerHTML = `<a href="${slideUrl}" onclick="goToSlide('${rowData.sourceSlideId}'); return false;" target="ls_${activePresentationId}">${rowData.sourceSlidePageNumber}</a>`;
+                // The href is for right-click > open in new tab functionality, while onclick handles the in-app navigation
+                const aNode = createLink(slideUrl, `ls_${activePresentationId}`, sourceSlideCellText, `goToSlide('${rowData.sourceSlideId}'); return false;`);
+                sourceSlideCell.appendChild(aNode);
             } else {
-                sourceSlideCell.textContent = rowData.sourceSlidePageNumber; // Just display number if no ID
+                sourceSlideCell.textContent = sourceSlideCellText;
             }
 
             // Target Presentation Name (with link)
             const targetPresCell = row.insertCell();
             if (rowData.targetPresentationId){
-                targetPresCell.innerHTML = `<a href="https://docs.google.com/presentation/d/${rowData.targetPresentationId}/edit" target="ls_${rowData.targetPresentationId}">${rowData.targetPresentationName}</a>`;
+                const url = "https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit";
+                const aNode = createLink(url, `ls_${rowData.targetPresentationId}`, rowData.targetPresentationName);
+                targetPresCell.appendChild(aNode);
             } else {
                 targetPresCell.textContent = '';
             }
@@ -326,8 +372,9 @@ environment, please contact Green Duck Punch, LLC.
             // Target Slide # (with link to target slide if applicable)
             const targetSlideCell = row.insertCell();
             if (rowData.targetSlideObjectId){
-                let url = "https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit#slide=id." + rowData.targetSlideObjectId;
-                targetSlideCell.innerHTML = `<a href="${url}" target="ls_${rowData.targetPresentationId}">${rowData.targetSlidePageNumber}</a>`;
+                const url = "https://docs.google.com/presentation/d/" + rowData.targetPresentationId + "/edit#slide=id." + rowData.targetSlideObjectId;
+                const aNode = createLink(url, `ls_${rowData.targetPresentationId}`, rowData.targetSlidePageNumber);
+                targetSlideCell.appendChild(aNode);
             } else {
                 targetSlideCell.textContent = '';
             }
@@ -771,6 +818,9 @@ environment, please contact Green Duck Punch, LLC.
                 toggleDropdown(event, columnKey);
             });
         });
+
+        const compactModeCheckbox = document.getElementById('compact-mode-checkbox');
+        compactModeCheckbox.addEventListener('change', toggleCompactMode);
 
         // Initial sort and render when the dialog loads
         sortTable('sourceSlidePageNumber', 'asc');
