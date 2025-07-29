@@ -110,7 +110,7 @@ function findLinkedSlides() {
   // Set the title, dimensions, and sandbox mode for the dialog.
   const htmlOutput = template.evaluate()
     .setTitle('Find Linked Slides')
-    .setWidth(1000) // Increased width to better accommodate the Picker
+    .setWidth(800) // Increased width to better accommodate the Picker
     .setHeight(600)  // Increased height to better accommodate the Picker
     .setSandboxMode(HtmlService.SandboxMode.IFRAME); // IFRAME mode is recommended for security
 
