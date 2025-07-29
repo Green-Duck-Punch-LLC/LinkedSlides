@@ -84,6 +84,8 @@ environment, please contact Green Duck Punch, LLC.
         <div>
             <p>Note: You will be able to cancel your subscription via the cancellation link in the confirmation email
                 you receive after checking out.</p>
+            <p>For bulk purchases, please visit our 
+                <a href="https://www.greenduckpunch.com/LinkedSlidesBulk" target="_blank">bulk purchase page</a>.</p>
         </div>
     </div>
     <div id="thank-you-container">
@@ -143,7 +145,7 @@ environment, please contact Green Duck Punch, LLC.
                     if (preview && preview.data && preview.data.details.lineItems && preview.data.details.lineItems.length == 1) {
                         let item = preview.data.details.lineItems[0];
                         pricePreviewDiv.innerHTML = `
-                  <p>${item.product.name} - ${item.price.name}: <b>${item.formattedTotals.total}/${item.price.billingCycle.interval}</b></p>
+                  <p>Buy ${item.product.name} - ${item.price.name}: <b>${item.formattedTotals.total}/${item.price.billingCycle.interval}</b></p>
                 `;
                     } else {
                         pricePreviewDiv.innerHTML = "<p><b>Could not retrieve price preview.</b></p>";
