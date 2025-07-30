@@ -112,6 +112,14 @@ environment, please contact Green Duck Punch, LLC.
       & td:first-child {
         border-right: 1px solid #ebebeb;
       }
+
+      & #target-presentation-column {
+        width: 8em;
+      }
+      & #target-slide-column {
+        width: 5em;
+      }
+
     }
 
     .super-header th {
@@ -123,6 +131,10 @@ environment, please contact Green Duck Punch, LLC.
       position: relative;
       display: inline-block;
       width: 100%;
+      & > button {
+        padding: 0 0.25em;
+        min-width: unset;
+      }
     }
 
     .dropdown-content {
@@ -281,6 +293,11 @@ environment, please contact Green Duck Punch, LLC.
     <label><input type="checkbox" id="compact-mode-checkbox">Show abbreviated titles</label>
     <div id="table-container" class="scrollable">
     <table>
+      <colgroup>
+        <col id="source-slide-column" />
+        <col id="target-presentation-column" />
+        <col id="target-slide-column"/>
+      </colgroup>
       <thead>
         <tr class="super-header">
           <th scope="col" colspan="1">Source</th>
