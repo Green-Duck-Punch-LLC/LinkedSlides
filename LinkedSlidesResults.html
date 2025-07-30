@@ -137,12 +137,15 @@ environment, please contact Green Duck Punch, LLC.
       padding: 10px;
       border-radius: 0.25rem;
       max-height: 250px;
-      overflow-y: auto;
       text-align: left;
+    }
+
+    .scrollable {
+      overflow-y: auto;
       mask-image: linear-gradient(to bottom, black 0%, black 90%, transparent 100%);
     }
 
-    .dropdown-content.no-mask {
+    .scrollable.no-mask {
       mask-image: none;
       -webkit-mask-image: none;
     }
@@ -276,7 +279,7 @@ environment, please contact Green Duck Punch, LLC.
     </svg>
 
     <label><input type="checkbox" id="compact-mode-checkbox">Show abbreviated titles</label>
-    <div id="table-container">
+    <div id="table-container" class="scrollable">
     <table>
       <thead>
         <tr class="super-header">
@@ -537,6 +540,7 @@ environment, please contact Green Duck Punch, LLC.
 
         dropdownContent.innerHTML = ''; // Clear previous options
         const innerDiv = document.createElement('div');
+        innerDiv.classList.add('scrollable');
         dropdownContent.appendChild(innerDiv);
 
         if (key === 'sourceSlidePageNumber') {
@@ -731,25 +735,26 @@ environment, please contact Green Duck Punch, LLC.
         }
       }
 
-      // Function to toggle mask based on scroll position
-      const toggleMask = () => {
-        // Check if the user has scrolled to the bottom
-        const isAtBottom = dropdownContent.scrollHeight - dropdownContent.scrollTop - dropdownContent.clientHeight < 1;
-
-        // Toggle the 'no-mask' class based on whether scrolling is needed and if we're at the bottom
-        if (isAtBottom) {
-          dropdownContent.classList.add('no-mask');
-        } else {
-          dropdownContent.classList.remove('no-mask');
-        }
-      };
-
       // Call toggleMask initially and on scroll
       setTimeout(() => {
-        toggleMask();
+        const scrollable = dropdownContent.querySelector('.scrollable');
+        toggleMask.call(scrollable);
         // Listen for scroll events to update the mask
-        dropdownContent.addEventListener('scroll', toggleMask);
+        scrollable.addEventListener('scroll', toggleMask);
       }, 0);
+    }
+
+    // Function to toggle mask based on scroll position
+    function toggleMask() {
+      // Check if the user has scrolled to the bottom
+      const isAtBottom = this.scrollHeight - this.scrollTop - this.clientHeight < 1;
+
+      // Toggle the 'no-mask' class based on whether scrolling is needed and if we're at the bottom
+      if (isAtBottom) {
+        this.classList.add('no-mask');
+      } else {
+        this.classList.remove('no-mask');
+      }
     }
 
     /**
@@ -885,6 +890,13 @@ environment, please contact Green Duck Punch, LLC.
 
       // Initial sort and render when the dialog loads
       sortTable('sourceSlidePageNumber', 'asc');
+
+      // Call toggleMask initially and on scroll
+      document.querySelectorAll('.scrollable').forEach(elem => {
+        toggleMask.call(elem);
+        // Listen for scroll events to update the mask
+        elem.addEventListener('scroll', toggleMask);
+      });
     });
   </script>
 </body>
