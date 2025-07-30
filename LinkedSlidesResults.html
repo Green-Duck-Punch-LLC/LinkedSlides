@@ -41,6 +41,10 @@ environment, please contact Green Duck Punch, LLC.
     }
 
     #container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
       margin: auto;
       text-align: center;
       position: relative;
@@ -57,11 +61,24 @@ environment, please contact Green Duck Punch, LLC.
       margin: 1rem 0;
     }
 
+    #table-container {
+      border-top: 1px solid #ebebeb;
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
     #container table {
       table-layout: fixed;
       width: 100%;
       border: 1px solid #ebebeb;
+      border-top-width: 0px;
       border-collapse: collapse;
+
+      & thead {
+        position: sticky;
+        top: 0;
+        background-color: white;
+      }
 
       &.compact .source-slide-cell {
         white-space: nowrap;
@@ -259,6 +276,7 @@ environment, please contact Green Duck Punch, LLC.
     </svg>
 
     <label><input type="checkbox" id="compact-mode-checkbox">Show abbreviated titles</label>
+    <div id="table-container">
     <table>
       <thead>
         <tr class="super-header">
@@ -311,6 +329,7 @@ environment, please contact Green Duck Punch, LLC.
         <!-- Table rows will be rendered by JavaScript -->
       </tbody>
     </table>
+  </div>
   </div>
 
   <!-- Global container for dropdowns to prevent clipping -->
