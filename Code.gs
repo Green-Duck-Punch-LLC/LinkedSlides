@@ -332,72 +332,21 @@ function _getFileDetailsForIds(fileIds) {
     return [];
   }
 
-  const batchPath = "batch/drive/v3";
-  const driveApiBaseUrl = "https://www.googleapis.com/drive/v3";
-  const fileRequests = [];
-
-  fileIds.forEach(id => {
-    fileRequests.push({
-      method: "GET",
-      endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name,parents,driveId,trashed`
-    });
-  });
-  const fileResponses = EDo({
-    requests: fileRequests,
-    batchPath: batchPath,
-  });
-  const parentNameMap = {};
-  fileResponses.forEach(file => {
-    if (file.error)
-      consoleError_(`Error retrieving details for file`, file.error);
-    else if (file.parents && file.parents.length > 0 && file.parents[0] != file.driveId)
-      parentNameMap[file.parents[0]] = 'Unknown Folder';
-    else if (file.driveId) {
-      parentNameMap[file.driveId] = 'Unknown Shared Drive'
-    }
-  });
-  const parentRequests = [];
-  Object.keys(parentNameMap).forEach(id => {
-    if (parentNameMap[id] === 'Unknown Shared Drive') {
-      parentRequests.push({
-        method: "GET",
-        endpoint: `${driveApiBaseUrl}/drives/${id}?fields=id,name`
-      });
-    } else {
-      parentRequests.push({
-        method: "GET",
-        endpoint: `${driveApiBaseUrl}/files/${id}?supportsAllDrives=true&fields=id,name`
-      });
-    }
-  });
-  const parentResponses = EDo({
-    requests: parentRequests,
-    batchPath: batchPath,
-  });
-  parentResponses.forEach(parent => {
-    if (parent.error)
-      consoleError_(`Error retrieving parent name`, parent.error);
-    else
-      parentNameMap[parent.id] = parent.name;
-  });
   const fileDetails = [];
-  fileResponses.forEach(file => {
-    if (file.error) return; // Errors were logged earlier.
-    const detail = {
-      id: file.id,
-      name: file.name,
-      trashed: file.trashed
-    };
-    if (file.trashed) {
-      detail.parentName = '(Trash)';
-    } else if (file.parents && file.parents.length > 0) {
-      detail.parentName = parentNameMap[file.parents[0]];
-    } else if (file.driveId) {
-      detail.parentName = parentNameMap[file.driveId];
-    } else {
-      detail.parentName = 'My Drive';
+  fileIds.forEach(id => {
+    try {
+      const file = SlidesApp.openById(id);
+      if (file) {
+        fileDetails.push({
+          id: file.getId(),
+          name: file.getName(),
+        });
+      } else {
+        consoleWarn_(`_getFileDetailsForIds: File with ID "${id}" not found.`);
+      }
+    } catch (e) {
+      consoleError_(`Error in _getFileDetailsForIds with fileId "${id}"`, e);
     }
-    fileDetails.push(detail);
   });
   return fileDetails;
 }

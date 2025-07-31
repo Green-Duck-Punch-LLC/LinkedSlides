@@ -181,7 +181,6 @@
             <thead>
               <tr>
                 <th scope="col"><b>File Name</b></th>
-                <th scope="col"><b>Containing Folder</b></th>
                 <th scope="col" class="action-col"><b>Action</b></th>
               </tr>
             </thead>
@@ -381,15 +380,6 @@
         const nameCell = row.insertCell();
         nameCell.textContent = file.name;
 
-        const folderCell = row.insertCell();
-        // A file can have multiple parents. We'll display the first one.
-        // The parentName is now attached directly to the file object. Default if missing.
-        folderCell.textContent = file.parentName || 'My Drive';
-
-        if (file.trashed) {
-          folderCell.classList.add('trashed');
-        }
-
         const actionCell = row.insertCell();
         actionCell.className = 'action-col';
 
@@ -507,46 +497,11 @@
         // Filter out files that are already in our list to avoid reprocessing
         const newDocs = docs.filter(doc => !selectedFiles.has(doc.id));
         if (newDocs.length === 0) return; // No new unique files were selected
-
-        // Case 1: Picker provides parent info (user navigated to a folder in My Drive)
-        if (data.parents && data.parents.length > 0) {
-          const parentName = data.parents[0].name;
-          newDocs.forEach(doc => {
-            doc.parentName = parentName; // Add our custom property
-            selectedFiles.set(doc.id, doc);
-          });
-          renderSelectedFilesTable();
-          saveSelectedFiles();
-        } else {
-          // Case 2: Picker does NOT provide parent info (e.g., user used search OR selected from a Shared Drive)
-          // Add docs to the list with a placeholder and trigger a server-side fetch.
-          let allInfoFetched = false;
-          newDocs.forEach(doc => {
-            doc.parentName = 'Loading...'; // Placeholder text
-            selectedFiles.set(doc.id, doc);
-          });
-          renderSelectedFilesTable(); // Show the new files immediately with the placeholder
-
-          const newFileIds = newDocs.map(doc => doc.id);
-          google.script.run
-            .withSuccessHandler(fileDetails => {
-              fileDetails.forEach(file => {
-                if (selectedFiles.has(file.id)) {
-                  selectedFiles.get(file.id).parentName = file.parentName;
-                }
-              });
-              renderSelectedFilesTable();
-              saveSelectedFiles();
-            })
-            .withFailureHandler(error => {
-              console.error('Failed to fetch parent info:', error);
-              // Handle failure by updating the placeholder text
-              newFileIds.forEach(id => { if (selectedFiles.has(id)) selectedFiles.get(id).parentName = 'Unknown'; });
-              renderSelectedFilesTable();
-              saveSelectedFiles();
-            })
-            ._getFileDetailsForIds(newFileIds);
-        }
+        newDocs.forEach(doc => {
+          selectedFiles.set(doc.id, doc);
+        });
+        renderSelectedFilesTable();
+        saveSelectedFiles();
       } else if (data.action === google.picker.Action.CANCEL) {
         // If the user cancels and no files have been selected yet, close the dialog.
         // Otherwise, do nothing and let them continue from the selection view.
