@@ -560,6 +560,19 @@ environment, please contact Green Duck Punch, LLC.
         innerDiv.classList.add('scrollable');
         dropdownContent.appendChild(innerDiv);
 
+        // Add a click listener to the dropdown's content. This is a workaround for a quirk
+        // in Safari where clicking on a label does not reliably focus the checkbox within it.
+        // By explicitly setting focus, we ensure that after a user clicks a filter option,
+        // the dropdown is ready to receive keyboard events, such as using 'Escape' to close it.
+        innerDiv.addEventListener('click', (e) => {
+          if (e.target.tagName === 'LABEL') {
+            const input = e.target.querySelector('input[type="checkbox"]');
+            if (input) {
+              input.focus();
+            }
+          }
+        });
+
         if (key === 'sourceSlidePageNumber') {
           const createFilterLink = (text) => {
             const button = document.createElement('button');
@@ -661,19 +674,40 @@ environment, please contact Green Duck Punch, LLC.
 
         // Add accessibility event listeners
         dropdownContent.addEventListener('keydown', (e) => {
+          // 'Esc' is for older browsers; modern browsers use 'Escape'.
           if (e.key === 'Escape') {
             e.stopPropagation();
             closeDropdownAndFocusButton(key);
           }
         });
 
+        // This flag helps distinguish between a focusout caused by tabbing away vs. a click
+        // on an item inside the dropdown. A mousedown on a dropdown item will set this to true
+        // just before the focusout event fires.
+        let isClickingInsideDropdown = false;
+        dropdownContent.addEventListener('mousedown', () => {
+          isClickingInsideDropdown = true;
+        });
+
         dropdownContent.addEventListener('focusout', (e) => {
-          // If focus moves to an element not within this dropdown, close it.
-          if (!dropdownContent.contains(e.relatedTarget)) {
-            dropdownContent.style.display = 'none';
+          // Use a timeout to defer the check. This allows time for a click event to be processed
+          // and for the `isClickingInsideDropdown` flag to be set.
+          setTimeout(() => {
+            if (isClickingInsideDropdown) {
+              // A click just happened inside the dropdown. Reset the flag and do nothing,
+              // as the click's own handler will manage the dropdown's state.
+              isClickingInsideDropdown = false;
+              return;
+            }
+
+            // If we are here, it means focus was lost due to something other than a click
+            // inside the dropdown (e.g., tabbing out).
             const button = document.querySelector(`.dropdown-button[data-column="${key}"]`);
-            if (button) button.setAttribute('aria-expanded', 'false');
-          }
+            if (document.activeElement !== button && !dropdownContent.contains(document.activeElement)) {
+              dropdownContent.style.display = 'none';
+              if (button) button.setAttribute('aria-expanded', 'false');
+            }
+          }, 0);
         });
       });
     }
@@ -844,8 +878,10 @@ environment, please contact Green Duck Punch, LLC.
       renderTable(); // Re-render the filtered data
     }
 
-    // Close dropdowns when clicking outside
-    window.onclick = function (event) {
+    // Close dropdowns when clicking outside. Using mousedown to avoid race
+    // conditions in Safari where a click inside the dropdown might be
+    // missed if the window.onclick handler closes the dropdown first.
+    document.addEventListener('mousedown', function (event) {
       if (!event.target.closest('.dropdown-button') && !event.target.closest('.dropdown-content')) {
         document.querySelectorAll('.dropdown-content').forEach(content => {
           content.style.display = 'none';
@@ -854,7 +890,7 @@ environment, please contact Green Duck Punch, LLC.
           btn.setAttribute('aria-expanded', 'false');
         });
       }
-    };
+    });
 
     function findLinkedSlides() {
       const newSearchButton = document.getElementById('find-linked-slides');
