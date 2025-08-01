@@ -83,6 +83,16 @@ function launchLinkedSlides() {
  * It also passes the OAuth token to the HTML for Picker API authentication.
  */
 function findLinkedSlides() {
+  const authInfo = ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL);
+  if (authInfo.getAuthorizationStatus() === ScriptApp.AuthorizationStatus.REQUIRED) {
+    const authUrl = authInfo.getAuthorizationUrl();
+    SlidesApp.getUi().showModalDialog(
+      HtmlService.createHtmlOutput(`<p>Please <a href="${authUrl}" target="_blank">grant <em>all</em> of the required permissions</a> and then try again.</p><p>For more information, see the <a href="https://www.greenduckpunch.com/LinkedSlides-permissions" target="_blank">Linked Slides Permissions Explainer</a>.</p>`),
+      'The Linked Slides Add-on Needs Permissions'
+    );
+    return;
+  }
+
   // Enforce licensing. If the user is not licensed, this function will
   // show a dialog and return false, stopping further execution.
   if (typeof _enforceLicense !== 'undefined' && !_enforceLicense()) {
