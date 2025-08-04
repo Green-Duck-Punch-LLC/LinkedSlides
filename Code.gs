@@ -132,9 +132,9 @@ function findLinkedSlides() {
  * Performs the search for linked slides based on user input and updates the sidebar.
  * This function is called by the HTML dialog via google.script.run.
  *
- * @param {string} presentationIdsString A comma-separated string of Google Slides presentation IDs.
+ * @param {string[]} presentationIds An array of Google Slides presentation IDs.
  */
-function _performLinkedSlideSearch(presentationIdsString) {
+function _performLinkedSlideSearch(presentationIds) {
   const ui = SlidesApp.getUi();
   const progressHtml = HtmlService.createHtmlOutput("Searching for linked slides...").setTitle('Linked Slides Search');
   ui.showSidebar(progressHtml);
@@ -148,7 +148,7 @@ function _performLinkedSlideSearch(presentationIdsString) {
     }
     try {
       userCache.put(isSearchingKey, 'true', 5 * 60); //Prevent overlapping searches for 5 minutes
-      const resultsHtml = generateSearchResults_(presentationIdsString);
+      const resultsHtml = generateSearchResults_(presentationIds);
       ui.showSidebar(resultsHtml);
     } finally {
       userCache.remove(isSearchingKey);
@@ -164,10 +164,10 @@ function _performLinkedSlideSearch(presentationIdsString) {
  * active presentation and returns a webpage of search results.
  * This function is called internally by _performLinkedSlidesSearch()
  *
- * @param {string} presentationIdsString A comma-separated string of Google Slides presentation IDs.
+ * @param {string[]} presentationIds An array of Google Slides presentation IDs.
  * @returns {HtmlOutput} The search results suitable for display as a sidebar.
  */
-function generateSearchResults_(presentationIdsString) {
+function generateSearchResults_(presentationIds) {
   const activePresentation = SlidesApp.getActivePresentation();
   const activePresentationId = activePresentation.getId();
 
@@ -190,10 +190,12 @@ function generateSearchResults_(presentationIdsString) {
 
   const displayRows = []; // This will be the final array of rows for the table
 
-  // Parse the input string of presentation IDs.
-  const targetPresentationIds = presentationIdsString.split(',')
+  // Sanitize the presentation IDs.
+  const targetPresentationIds = presentationIds
     .map(id => id.trim())
     .filter(id => id.length > 0);
+    
+  saveSelectedFiles_(JSON.stringify(targetPresentationIds));
 
   const errors = []; // Stores errors encountered while accessing presentations
 
@@ -322,7 +324,7 @@ function _goToSlide(slideId) {
  * selections (as file IDs) to be remembered for each presentation.
  * @param {string} selectedFileIdsJson A JSON string of an array of file IDs to save.
  */
-function _saveSelectedFiles(selectedFileIdsJson) {
+function saveSelectedFiles_(selectedFileIdsJson) {
   const presentationId = SlidesApp.getActivePresentation().getId();
   const userProperties = PropertiesService.getUserProperties();
   // Create a unique key for this presentation to store its selected files.

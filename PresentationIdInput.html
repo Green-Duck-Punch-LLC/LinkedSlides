@@ -408,7 +408,7 @@
      * @param {string[]} fileIds An array of file IDs.
      */
     function loadInitialFileDetails(fileIds) {
-      showMessage('Loading previously selected files...', 'info');
+      showMessage('Loading files from most recent search...', 'info');
       document.getElementById('start-search-btn').disabled = true;
       document.getElementById('add-files-btn').disabled = true;
 
@@ -437,7 +437,6 @@
 
           renderSelectedFilesTable();
           document.getElementById('add-files-btn').disabled = false;
-          saveSelectedFiles();
         })
         .withFailureHandler(error => {
           console.error('Failed to load initial file details:', error);
@@ -453,20 +452,6 @@
     }
 
     /**
-     * Saves the current list of selected files to the server as a JSON string.
-     */
-    function saveSelectedFiles() {
-      // Convert the Map keys (the file objects) to an array and stringify for transport.
-      const filesIdsToSave = JSON.stringify(Array.from(selectedFiles.keys()));
-      google.script.run
-        .withFailureHandler(err => {
-          console.error("Failed to save file list:", err);
-          showMessage("Could not save file selection. Changes may not be remembered.", 'error');
-        })
-        ._saveSelectedFiles(filesIdsToSave);
-    }
-
-    /**
      * Handles clicks on the file table, specifically for the "Remove" button.
      * @param {Event} event The click event.
      */
@@ -475,7 +460,6 @@
         const fileId = event.target.dataset.fileId;
         selectedFiles.delete(fileId);
         renderSelectedFilesTable();
-        saveSelectedFiles();
       }
     }
 
@@ -501,7 +485,6 @@
           selectedFiles.set(doc.id, doc);
         });
         renderSelectedFilesTable();
-        saveSelectedFiles();
       } else if (data.action === google.picker.Action.CANCEL) {
         // If the user cancels and no files have been selected yet, close the dialog.
         // Otherwise, do nothing and let them continue from the selection view.
@@ -520,8 +503,6 @@
         return;
       }
 
-      const presentationIds = Array.from(selectedFiles.keys()).join(',');
-
       google.script.run
         .withSuccessHandler(retVal => {
           console.log("_performLinkedSlideSearch returned:", retVal);
@@ -533,7 +514,7 @@
           document.getElementById('add-files-btn').disabled = false;
           document.getElementById('start-search-btn').disabled = false;
         })
-        ._performLinkedSlideSearch(presentationIds);
+        ._performLinkedSlideSearch(Array.from(selectedFiles.keys()));
       google.script.host.close();
     }
 
