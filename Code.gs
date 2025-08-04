@@ -352,6 +352,7 @@ function _getFileDetailsForIds(fileIds) {
         fileDetails.push({
           id: file.getId(),
           name: file.getName(),
+          url: file.getUrl()
         });
       } else {
         consoleWarn_(`_getFileDetailsForIds: File with ID "${id}" not found.`);

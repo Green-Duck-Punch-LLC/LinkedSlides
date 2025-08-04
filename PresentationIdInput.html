@@ -378,7 +378,11 @@
         const row = tableBody.insertRow();
 
         const nameCell = row.insertCell();
-        nameCell.textContent = file.name;
+        const aNode = document.createElement('a');
+        aNode.setAttribute('href', file.url);
+        aNode.setAttribute('target', `ls_${file.id}`);
+        aNode.textContent = file.name;
+        nameCell.appendChild(aNode);
 
         const actionCell = row.insertCell();
         actionCell.className = 'action-col';
