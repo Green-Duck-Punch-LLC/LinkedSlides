@@ -50,6 +50,15 @@ function onOpen() {
 }
 
 /**
+ * The event handler triggered when installing the add-on.
+ * @param {Event} e The onInstall event.
+ * @see https://developers.google.com/apps-script/guides/triggers#oninstalle
+ */
+function onInstall(e) {
+  onOpen(e);
+}
+
+/**
  * Displays a dialog with instructions to contact support and include the user key.
  */
 function showContactSupportDialog() {
