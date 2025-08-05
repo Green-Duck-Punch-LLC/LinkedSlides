@@ -27,6 +27,17 @@
  */
 
 /**
+ * This function is just called from client webpages to force google.script.run 
+ * to perform its session handshake so that it doesn't need to do it as part of
+ * a later user-initiated request. For unclear reasons, the session handshake
+ * itself completes in a ~300ms but the actual initial request does not complete
+ * for ~5000ms. Luckily, other requests can be made efficiently while waiting
+ * for the initial request to complete.
+ */
+function _warmUp() {
+}
+
+/**
  * Adds a custom menu to the Google Slides UI when the presentation is opened.
  * This function is designed for a Google Workspace Add-on, appearing under the
  * "Extensions" menu.

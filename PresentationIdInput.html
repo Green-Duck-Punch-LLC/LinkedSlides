@@ -24,6 +24,21 @@
 <html>
 
 <head>
+  <script type="text/javascript">
+    google.script.run._warmUp();
+    const gapiScript = document.createElement('script');
+    gapiScript.src = "https://apis.google.com/js/api.js";
+    gapiScript.async = true;
+    var pickerLoaded = null;
+    const pickerApiPromise = new Promise(resolve => { pickerLoaded = resolve; });
+    gapiScript.onload = function() {
+      gapi.load('picker', { callback: () => { pickerLoaded(); } });
+    };
+    gapiScript.onerror = function() {
+      console.error('Failed to load the Google API script.');
+    };
+    document.head.appendChild(gapiScript);    
+  </script>
   <base target="_top">
   <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
   <style>
@@ -67,7 +82,6 @@
     }
 
     #message {
-      display: hidden;
       padding: 0.75rem;
       margin-bottom: 1rem;
       border-radius: 0.5rem;
@@ -175,10 +189,8 @@
 </head>
 
 <body>
-  <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
-
   <div id="container">
-    <div id="message" role="alert"></div>
+    <div id="message" class="hidden" role="alert"></div>
 
     <div id="selection-view" class="hidden">
       <div id="files">
@@ -201,7 +213,8 @@
 
     <div id="dialog-actions">
       <button id="start-search-btn" class="action" disabled>Start search</button>
-      <button id="add-files-btn">Add files</button>
+      <button id="add-recent-btn" disabled>Add files from most recent search</button>
+      <button id="add-files-btn" disabled>Add files</button>
     </div>
   </div>
 
@@ -221,7 +234,8 @@
     function showMessage(msg, type = 'info') {
       const messageDiv = document.getElementById('message');
       messageDiv.textContent = msg;
-      messageDiv.className = `${type} message-${type}`;
+      messageDiv.classList.remove('hidden');
+      messageDiv.classList.add(`${type}`, `message-${type}`);
     }
 
     /**
@@ -243,7 +257,8 @@
         liNode.textContent = msg;
         ulNode.appendChild(liNode);
       });
-      messageDiv.className = `${type} message-${type}`;
+      messageDiv.classList.remove('hidden');
+      messageDiv.classList.add(`${type}`, `message-${type}`);
     }
 
     /**
@@ -254,31 +269,16 @@
       messageDiv.classList.add('hidden');
     }
 
-    /**
-     * Callback function for when the Google API client library (gapi.client) is loaded.
-     * This function is called by gapi.load('client', onClientLoad).
-     */
-    function onClientLoad() {
-      gapi.client.init({
-        // No explicit API key needed when using OAuth token directly for Picker
-      }).then(function () {
-        // Set the OAuth token for gapi.client
-        gapi.auth.setToken({
-          access_token: OAUTH_TOKEN
-        });
-        // Now that gapi.client is initialized and authenticated, load the Picker API
-        gapi.load('picker', { callback: onPickerApiReady });
-      }, function (error) {
-        console.error("Error initializing gapi client:", error);
-        showMessage("Error initializing Google APIs. Please check your browser console for details.", 'error');
-      });
-    }
+    var isPickerApiReady = false;
 
     /**
      * Callback function for when the Google Picker API is loaded.
      * Automatically creates and displays the picker if no files were pre-loaded.
      */
     function onPickerApiReady() {
+      isPickerApiReady = true;
+      document.getElementById('add-files-btn').addEventListener('click', createPicker);
+      document.getElementById('add-files-btn').disabled = false;
       // If the dialog opens and no files have ever been selected for this presentation,
       // show the picker immediately to guide the user.
       if (initialFileIds.length === 0 && selectedFiles.size === 0) {
@@ -293,7 +293,7 @@
      * Creates and displays the Google Picker dialog.
      */
     function createPicker() {
-      if (!gapi.auth.getToken() || !gapi.auth.getToken().access_token) {
+      if (!OAUTH_TOKEN) {
         showMessage('Authentication token is missing. Please refresh the page and try again.', 'error');
         return;
       }
@@ -331,7 +331,7 @@
         .enableFeature(google.picker.Feature.MULTISELECT_ENABLED) // Correct method for multi-selection
         // setSelectableMimeTypes ensures only presentations can be selected, even if folders are visible
         .setSelectableMimeTypes(presentationMimeType)
-        .setOAuthToken(gapi.auth.getToken().access_token) // Set the OAuth token for authentication
+        .setOAuthToken(OAUTH_TOKEN) // Set the OAuth token for authentication
         .setCallback(pickerCallback) // Set the callback function for when selections are made
         .setOrigin(google.script.host.origin) // CRUCIAL FIX: Use google.script.host.origin
         .setSize(566, 350) // Minimum size, to prevent scrolling
@@ -368,18 +368,16 @@
      * Renders the table of selected files and updates UI visibility.
      */
     function renderSelectedFilesTable() {
-      const selectionView = document.getElementById('selection-view');
       const tableWrapper = document.getElementById('table-scroll-wrapper');
       const tableBody = document.getElementById('files-table-body');
       tableBody.innerHTML = ''; // Clear existing rows
 
       if (selectedFiles.size === 0) {
-        selectionView.classList.add('hidden');
-        document.getElementById('start-search-btn').disabled = true;
-        return;
+        const row = tableBody.insertRow();
+        const nameCell = row.insertCell();
+        nameCell.setAttribute('colspan', '2');
+        nameCell.innerHTML = '<strong>No files added yet.</strong>';
       }
-
-      selectionView.classList.remove('hidden');
 
       selectedFiles.forEach(file => {
         const row = tableBody.insertRow();
@@ -409,8 +407,23 @@
       // Use a small timeout to allow the browser to render and calculate heights correctly.
       // This determines if the scroll fade effect should be applied.
       setTimeout(handleScrollFade, 0);
+      refreshButtonStates();
+    }
 
-      document.getElementById('start-search-btn').disabled = false;
+    function disableButtons() {
+      document.getElementById('start-search-btn').disabled = true;
+      document.getElementById('add-recent-btn').disabled = true;
+      document.getElementById('add-files-btn').disabled = true;
+    }
+
+    function refreshButtonStates() {
+      document.getElementById('start-search-btn').disabled = selectedFiles.size === 0;
+      document.getElementById('add-recent-btn').disabled = initialFileIds.length === 0;
+      document.getElementById('add-files-btn').disabled = !isPickerApiReady;
+    }
+
+    function addRecentFiles() {
+      loadInitialFileDetails(initialFileIds);
     }
 
     /**
@@ -420,8 +433,7 @@
      */
     function loadInitialFileDetails(fileIds) {
       showMessage('Loading files from most recent search...', 'info');
-      document.getElementById('start-search-btn').disabled = true;
-      document.getElementById('add-files-btn').disabled = true;
+      disableButtons();
 
       google.script.run
         .withSuccessHandler(files => {
@@ -447,12 +459,10 @@
           }
 
           renderSelectedFilesTable();
-          document.getElementById('add-files-btn').disabled = false;
         })
         .withFailureHandler(error => {
           console.error('Failed to load initial file details:', error);
           showMessage('Error loading previously selected files. Please add them again.', 'error');
-          document.getElementById('add-files-btn').disabled = false;
           renderSelectedFilesTable();
         })
         ._getFileDetailsForIds(fileIds);
@@ -509,6 +519,7 @@
         showMessage('No presentations selected. Please select at least one.', 'error');
         return;
       }
+      disableButtons();
       document.body.classList.add('wait');
       google.script.run
         .withSuccessHandler(retVal => {
@@ -520,34 +531,28 @@
           document.body.classList.remove('wait');
           showMessage('Error: ' + error.message, 'error');
           console.error("Server-side error:", error);
-          document.getElementById('add-files-btn').disabled = false;
-          document.getElementById('start-search-btn').disabled = false;
-          google.script.host.close();
+          refreshButtonStates();
         })
         ._performLinkedSlideSearch(Array.from(selectedFiles.keys()));
     }
 
     // Initial setup on DOM content loaded
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('add-files-btn').addEventListener('click', createPicker);
-      document.getElementById('start-search-btn').addEventListener('click', startSearch);
-      document.getElementById('files-table-body').addEventListener('click', handleTableClick);
+      const addRecentButton = document.getElementById('add-recent-btn');
+      const addFilesButton = document.getElementById('add-files-btn');
+      const startSearchButton = document.getElementById('start-search-btn');
+      const filesTable = document.getElementById('files-table-body');
+
+      addRecentButton.addEventListener('click', addRecentFiles);
+      startSearchButton.addEventListener('click', startSearch);
+      filesTable.addEventListener('click', handleTableClick);
       document.getElementById('table-scroll-wrapper').addEventListener('scroll', handleScrollFade);
 
-      if (initialFileIds.length > 0) {
-        loadInitialFileDetails(initialFileIds);
-      } else {
-        renderSelectedFilesTable(); // Render empty table, picker will likely open
-      }
-
-      // Load the client library first. Once loaded, it will call onClientLoad,
-      // which in turn loads the picker library and may open it.
-      gapi.load('client', onClientLoad);
-
       if (initialFileIds.length === 0) {
-        // Initial message while APIs are loading, shown only if we expect to open the picker.
-        showMessage('Loading Google APIs...', 'info');
+        document.getElementById('add-recent-btn').classList.add('hidden');
       }
+      renderSelectedFilesTable();
+      pickerApiPromise.then(onPickerApiReady);
     });
   </script>
 </body>
