@@ -214,8 +214,9 @@ function generateSearchResults_(presentationIds) {
   const targetPresentationIds = presentationIds
     .map(id => id.trim())
     .filter(id => id.length > 0);
-    
-  saveSelectedFiles_(JSON.stringify(targetPresentationIds));
+  
+  const presentationIdsJson = JSON.stringify(presentationIds);
+  saveSelectedFiles_(presentationIdsJson);
 
   const errors = []; // Stores errors encountered while accessing presentations
 
@@ -278,6 +279,7 @@ function generateSearchResults_(presentationIds) {
 
   // Create a template for the results HTML and pass data
   const resultTemplate = HtmlService.createTemplateFromFile('LinkedSlidesResults');
+  resultTemplate.presentationIdsJson = presentationIdsJson;
   resultTemplate.displayRowsJson = JSON.stringify(displayRows);
   resultTemplate.activePresentationId = activePresentationId;
   resultTemplate.dialogTitle = dialogTitle;

@@ -523,7 +523,6 @@
       document.body.classList.add('wait');
       google.script.run
         .withSuccessHandler(retVal => {
-          console.log("_performLinkedSlideSearch returned:", retVal);
           document.body.classList.remove('wait');
           google.script.host.close();
         })

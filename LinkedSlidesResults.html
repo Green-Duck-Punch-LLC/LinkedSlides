@@ -243,6 +243,13 @@ environment, please contact Green Duck Punch, LLC.
       font-size: 1.2em;
     }
 
+    #refresh-results {
+      min-width: unset;
+      font-size: 1rem;
+      font-weight: normal;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
     .filterable-icon,
     .filtered-icon {
       width: 1em;
@@ -258,7 +265,7 @@ environment, please contact Green Duck Punch, LLC.
 </head>
 
 <body>
-  <div id="loading-overlay" style="display: none;"><span>Determining selection...</span></div>
+  <div id="loading-overlay" style="display: none;"></div>
   <div id="container">
     <p>
       <button id="find-linked-slides" onclick="findLinkedSlides()" class="action">Search again</button>
@@ -281,7 +288,7 @@ environment, please contact Green Duck Punch, LLC.
       <? } else if (displayRowsJson.length > 2 && !anyLinkedResults) { // Check if displayRowsJson is not just '[]' ?>
       No linked slides were found in the selected presentations
       <? } ?>
-      <strong id="results-timestamp-message"></strong>.
+      <strong id="results-timestamp-message"></strong>. <button id="refresh-results" title="Refresh results" onclick="refreshResults()">↻</button>
     </p>
     <svg style="display: none">
       <defs>
@@ -365,6 +372,8 @@ environment, please contact Green Duck Punch, LLC.
   <script>
     // Data passed from Apps Script. Using JSON.parse to ensure proper object conversion.
     let tableData = JSON.parse('<?= displayRowsJson ?>');
+    const presentationIds = JSON.parse('<?= presentationIdsJson ?>' || '[]');
+
     // activePresentationId is passed from the Apps Script server-side
     const activePresentationId = '<?= activePresentationId ?>';
     const searchTimestampString = '<?= searchTimestamp ?>';
@@ -509,6 +518,19 @@ environment, please contact Green Duck Punch, LLC.
       renderTable();
     }
 
+    function showOverlayMessage(message) {
+      document.body.classList.add('wait');
+      const loadingOverlay = document.getElementById('loading-overlay');
+      loadingOverlay.innerHTML = `<span>${message}</span>`;
+      loadingOverlay.style.display = 'flex';
+    }
+
+    function hideOverlayMessage() {
+      document.body.classList.remove('wait');
+      const loadingOverlay = document.getElementById('loading-overlay');
+      loadingOverlay.style.display = 'none';
+    }
+
     /**
      * Filters the source slides to only include the slides that are selected in the presentation.
      */
@@ -516,14 +538,11 @@ environment, please contact Green Duck Punch, LLC.
       const columnKey = 'sourceSlidePageNumber';
       const dropdownContent = dropdownContentCache[columnKey];
       const checkboxes = dropdownContent.querySelectorAll('input[type="checkbox"]:not(.select-all-toggle)');
-      const loadingOverlay = document.getElementById('loading-overlay');
-
-      // Show loading overlay to indicate work and block UI
-      if (loadingOverlay) loadingOverlay.style.display = 'flex';
+      showOverlayMessage('Determining selection...');
 
       google.script.run
         .withSuccessHandler(selectionInfo => {
-          if (loadingOverlay) loadingOverlay.style.display = 'none';
+          hideOverlayMessage();
 
           const slideIdsToMatch = new Set(selectionInfo.selectedSlideIds || []);
           const sourcePageNumbersToSelect = new Set();
@@ -537,12 +556,31 @@ environment, please contact Green Duck Punch, LLC.
           filterTable();
         })
         .withFailureHandler(err => {
-          if (loadingOverlay) loadingOverlay.style.display = 'none';
+          hideOverlayMessage();
           console.error('Failed to get selection info:', err);
           alert('Could not update selection from the presentation. Please try again.');
         })
         ._getSelectionInfo();
     }
+
+    /**
+     * Refresh the search results.
+     */
+    function refreshResults() {
+      showOverlayMessage('Refreshing results...');
+      google.script.run
+        .withSuccessHandler(retVal => {
+          hideOverlayMessage();
+        })
+        .withFailureHandler(error => {
+          hideOverlayMessage();
+          console.error("refreshResults() failed:", error);
+          alert('Could not refresh the search results. Please try again.');
+        })
+        ._performLinkedSlideSearch(presentationIds);
+    }
+
+
 
     /**
      * Populates the filter dropdowns with unique values from each column.
