@@ -32,13 +32,24 @@
       --text-color: #222;
     }
 
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       background-color: var(--bg-color);
-      padding: 1rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
+    }
+
+    body.wait, body.wait * {
+      cursor: wait !important;
     }
 
     #container {
@@ -153,10 +164,6 @@
 
     #selection-view table td button.remove-btn {
       min-width: unset;
-    }
-
-    .wait {
-      cursor: wait;
     }
 
     #dialog-actions {
@@ -451,10 +458,6 @@
         ._getFileDetailsForIds(fileIds);
     }
 
-    function setCursor(cursor) {
-      document.body.style.cursor = cursor;
-    }
-
     /**
      * Handles clicks on the file table, specifically for the "Remove" button.
      * @param {Event} event The click event.
@@ -506,20 +509,22 @@
         showMessage('No presentations selected. Please select at least one.', 'error');
         return;
       }
-
+      document.body.classList.add('wait');
       google.script.run
         .withSuccessHandler(retVal => {
           console.log("_performLinkedSlideSearch returned:", retVal);
+          document.body.classList.remove('wait');
+          google.script.host.close();
         })
         .withFailureHandler(error => {
+          document.body.classList.remove('wait');
           showMessage('Error: ' + error.message, 'error');
           console.error("Server-side error:", error);
-          setCursor('auto');
           document.getElementById('add-files-btn').disabled = false;
           document.getElementById('start-search-btn').disabled = false;
+          google.script.host.close();
         })
         ._performLinkedSlideSearch(Array.from(selectedFiles.keys()));
-      google.script.host.close();
     }
 
     // Initial setup on DOM content loaded

@@ -40,6 +40,10 @@ environment, please contact Green Duck Punch, LLC.
       align-items: center;
     }
 
+    body.wait, body.wait * {
+      cursor: wait !important;
+    }
+
     #container {
       display: flex;
       flex-direction: column;
@@ -895,12 +899,15 @@ environment, please contact Green Duck Punch, LLC.
     function findLinkedSlides() {
       const newSearchButton = document.getElementById('find-linked-slides');
       newSearchButton.disabled = true;
+      document.body.classList.add('wait');
       google.script.run
         .withSuccessHandler(err => {
           newSearchButton.disabled = false;
+          document.body.classList.remove('wait');
         })
         .withFailureHandler(err => {
           newSearchButton.disabled = false;
+          document.body.classList.remove('wait');
           console.error('findLinkedSlides() failed:', err);
         })
         .findLinkedSlides();
