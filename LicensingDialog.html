@@ -45,6 +45,11 @@ environment, please contact Green Duck Punch, LLC.
             margin-top: 20px;
         }
 
+        #purchase-prompt-container {
+            max-width: 50rem;
+            display: none;
+        }
+
         #terms-checkbox-container {
             display: flex;
             align-items: first;
@@ -54,6 +59,10 @@ environment, please contact Green Duck Punch, LLC.
 
         #terms-checkbox {
             margin-right: 10px;
+            border-color: red;
+            &:checked {
+                border-color: unset;
+            }
         }
 
         #terms-checkbox-container label {
@@ -72,10 +81,11 @@ environment, please contact Green Duck Punch, LLC.
 </head>
 
 <body onload="initializePaddle()">
+    <div id="checking-price-container">Checking current price...</div>
     <div id="purchase-prompt-container">
         <div id="price-preview"></div>
         <div id="terms-checkbox-container">
-            <input type="checkbox" id="terms-checkbox">
+            <input type="checkbox" id="terms-checkbox" required>
             <label for="terms-checkbox">
                 I understand that my subscription will only work with my
                 <?= userEmail ?> account and I agree to the
@@ -97,8 +107,8 @@ environment, please contact Green Duck Punch, LLC.
         </div>
     </div>
     <div id="thank-you-container">
-        <p><b>Thank you for subscribing!</b></p><button onclick="findLinkedSlides()" class="action">Find Linked
-            Slides</button>
+        <p><b>Thank you for subscribing!</b></p><button id="find-linked-slides" onclick="findLinkedSlides()" class="action">Find linked
+            copies of slides in this presentation</button>
     </div>
     <script>
         const termsCheckbox = document.getElementById('terms-checkbox');
@@ -167,8 +177,10 @@ environment, please contact Green Duck Punch, LLC.
                         pricePreviewDiv.innerHTML = `
                   <p>Buy ${item.product.name} - ${item.price.name}: <b>${item.formattedTotals.total}/${item.price.billingCycle.interval}</b></p>
                 `;
+                        document.getElementById('checking-price-container').style.display = 'none';
+                        document.getElementById('purchase-prompt-container').style.display = 'block';
                     } else {
-                        pricePreviewDiv.innerHTML = "<p><b>Could not retrieve price preview.</b></p>";
+                        document.getElementById('checking-price-container').innerHTML = "<p><b>Could not retrieve price.</b></p>";
                     }
                 });
         }
