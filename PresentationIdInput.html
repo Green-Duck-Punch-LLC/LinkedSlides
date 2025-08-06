@@ -220,7 +220,29 @@
 
   <script type="text/javascript">
     // Access the OAuth token passed from the Apps Script server-side
-    const OAUTH_TOKEN = '<?= oauthToken ?>';
+    let oauthToken = '<?= oauthToken ?>';
+
+    keepOAuthTokenFresh();
+
+    /**
+     * Tries to update the oAuthToken every oauthTokenLifetimeSecs/2 seconds.
+     */
+    function keepOAuthTokenFresh() {
+      let oauthTokenLifetimeSecs = parseInt('<?= oauthTokenLifetimeSecs ?>' || '3600');
+      setTimeout(function () {
+        google.script.run.
+          withSuccessHandler(newToken => {
+            oauthToken = newToken;
+            picker = null; // Force creation of a new picker (which will use the new token)
+            keepOAuthTokenFresh();
+          })
+          .withFailureHandler(error => {
+            console.error('Failed to refresh OAuth token', error);
+          })
+          ._getOAuthToken();
+      }, oauthTokenLifetimeSecs/2 * 1000);
+    }
+
     // Load IDs of initial files. Details will be fetched to ensure they are up-to-date.
     const initialFileIds = JSON.parse('<?= initialFileIdsJson ?>' || '[]');
     let selectedFiles = new Map();
@@ -293,7 +315,7 @@
      * Creates and displays the Google Picker dialog.
      */
     function createPicker() {
-      if (!OAUTH_TOKEN) {
+      if (!oauthToken) {
         showMessage('Authentication token is missing. Please refresh the page and try again.', 'error');
         return;
       }
@@ -331,7 +353,7 @@
         .enableFeature(google.picker.Feature.MULTISELECT_ENABLED) // Correct method for multi-selection
         // setSelectableMimeTypes ensures only presentations can be selected, even if folders are visible
         .setSelectableMimeTypes(presentationMimeType)
-        .setOAuthToken(OAUTH_TOKEN) // Set the OAuth token for authentication
+        .setOAuthToken(oauthToken) // Set the OAuth token for authentication
         .setCallback(pickerCallback) // Set the callback function for when selections are made
         .setOrigin(google.script.host.origin) // CRUCIAL FIX: Use google.script.host.origin
         .setSize(566, 350) // Minimum size, to prevent scrolling

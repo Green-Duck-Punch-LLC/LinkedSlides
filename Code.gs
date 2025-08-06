@@ -98,6 +98,16 @@ function launchLinkedSlides() {
 }
 
 /**
+ * Returns the OAuth token for the current user. This token is required by the Picker API
+ * to authenticate the user and access their Google Drive files.
+ * 
+ * @returns the OAuth token for the current user
+ */
+function _getOAuthToken() {
+  return ScriptApp.getOAuthToken();
+}
+
+/**
  * Opens a dialog to prompt the user for presentation IDs to search.
  * This function is the entry point for the "Find Linked Slides" menu item.
  * It also passes the OAuth token to the HTML for Picker API authentication.
@@ -119,9 +129,9 @@ function findLinkedSlides() {
     return;
   }
 
-  // Get the OAuth token for the current user. This token is required by the Picker API
-  // to authenticate the user and access their Google Drive files.
-  const oauthToken = ScriptApp.getOAuthToken();
+  const oauthToken = _getOAuthToken();
+  const oauthTokenLifetimeSecsPropValue = PropertiesService.getScriptProperties().getProperties()['OAUTH_TOKEN_LIFETIME_SECONDS']
+  const oauthTokenLifetimeSecs = parseInt(oauthTokenLifetimeSecsPropValue || '3600');
 
   // Retrieve previously selected files for this presentation from user properties.
   const presentationId = SlidesApp.getActivePresentation().getId();
@@ -133,6 +143,7 @@ function findLinkedSlides() {
   // (like the OAuth token) from the server-side script to the client-side HTML.
   const template = HtmlService.createTemplateFromFile('PresentationIdInput');
   template.oauthToken = oauthToken; // Pass the token to the template
+  template.oauthTokenLifetimeSecs = oauthTokenLifetimeSecs; // Pass the token lifetime to the template
   // Pass the saved files (or an empty array string) to the template.
   template.initialFileIdsJson = initialFileIdsJson || '[]';
 
