@@ -222,31 +222,69 @@
     // Access the OAuth token passed from the Apps Script server-side
     let oauthToken = '<?= oauthToken ?>';
 
-    keepOAuthTokenFresh();
+    const oauthTokenLifetimeSecs = parseInt('<?= oauthTokenLifetimeSecs ?>' || '3600');
+    let oauthTokenExpiresAt = Date.now() + (oauthTokenLifetimeSecs * 1000);
+    let tokenRefreshTimer;
 
     /**
-     * Tries to update the oAuthToken every oauthTokenLifetimeSecs/2 seconds.
+     * Fetches a new OAuth token from the server.
+     * @returns {Promise<void>} A promise that resolves when the token is refreshed.
      */
-    function keepOAuthTokenFresh() {
-      let oauthTokenLifetimeSecs = parseInt('<?= oauthTokenLifetimeSecs ?>' || '3600');
-      setTimeout(function () {
-        google.script.run.
-          withSuccessHandler(newToken => {
+    function refreshToken() {
+      return new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(newToken => {
             oauthToken = newToken;
-            picker = null; // Force creation of a new picker (which will use the new token)
-            keepOAuthTokenFresh();
+            oauthTokenExpiresAt = Date.now() + (oauthTokenLifetimeSecs * 1000);
+            picker = null; // Invalidate picker so a new one is created with the new token.
+            scheduleTokenRefresh(); // Schedule the next refresh.
+            resolve();
           })
           .withFailureHandler(error => {
             console.error('Failed to refresh OAuth token', error);
+            reject(error);
           })
           ._getOAuthToken();
-      }, oauthTokenLifetimeSecs/2 * 1000);
+      });
     }
+
+    /**
+     * Schedules the next automatic token refresh. It aims to refresh the token
+     * halfway through its validity period.
+     */
+    function scheduleTokenRefresh() {
+      clearTimeout(tokenRefreshTimer);
+
+      // Calculate the delay to refresh halfway to expiry.
+      const halfwayPoint = oauthTokenExpiresAt - (oauthTokenLifetimeSecs / 2 * 1000);
+      const delay = halfwayPoint - Date.now();
+
+      if (delay > 0) {
+        tokenRefreshTimer = setTimeout(refreshToken, delay);
+      } else {
+        // If we're already past the halfway point, refresh as soon as possible.
+        // This can happen if the page was inactive.
+        refreshToken().catch(err => { /* Error is logged in refreshToken */ });
+      }
+    }
+
+    /**
+     * Handles the document's visibility change events to ensure the token
+     * refresh timer is accurate, even after the tab has been inactive.
+     */
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        scheduleTokenRefresh();
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    scheduleTokenRefresh(); // Initial schedule.
 
     // Load IDs of initial files. Details will be fetched to ensure they are up-to-date.
     const initialFileIds = JSON.parse('<?= initialFileIdsJson ?>' || '[]');
     let selectedFiles = new Map();
     let picker;
+    let pickerTokenExpiresAt;
 
     /**
      * Displays a message in the dialog.
@@ -304,8 +342,7 @@
       // If the dialog opens and no files have ever been selected for this presentation,
       // show the picker immediately to guide the user.
       if (initialFileIds.length === 0 && selectedFiles.size === 0) {
-        hideMessage(); // Hide any initial loading message
-        createPicker();
+        createPicker(); // createPicker will hide any initial loading message
       }
     }
 
@@ -314,10 +351,24 @@
     /**
      * Creates and displays the Google Picker dialog.
      */
-    function createPicker() {
+    async function createPicker() {
+      hideMessage();
       if (!oauthToken) {
         showMessage('Authentication token is missing. Please refresh the page and try again.', 'error');
         return;
+      }
+
+      const halfwayPoint = oauthTokenExpiresAt - (oauthTokenLifetimeSecs / 2 * 1000);
+      // Refresh token if it has less than half it's life remaining
+      if (Date.now() >= halfwayPoint) {
+        try {
+          showMessage('Refreshing authentication...', 'info');
+          await refreshToken();
+          hideMessage();
+        } catch (error) {
+          showMessage('Could not refresh authentication token. Please close and reopen this dialog.', 'error');
+          return;
+        }
       }
 
       // If picker is already created, just make it visible. This preserves the user's last folder location.
@@ -325,6 +376,9 @@
         picker.setVisible(true);
         return;
       }
+
+      // Store the expiration time of the token being used to create this picker instance.
+      pickerTokenExpiresAt = oauthTokenExpiresAt;
 
       // Define the MIME types for Google Slides presentations and folders.
       const presentationMimeType = 'application/vnd.google-apps.presentation';
@@ -445,6 +499,7 @@
     }
 
     function addRecentFiles() {
+      hideMessage();
       loadInitialFileDetails(initialFileIds);
     }
 
@@ -496,6 +551,7 @@
      */
     function handleTableClick(event) {
       if (event.target.matches('.remove-btn')) {
+        hideMessage();
         const fileId = event.target.dataset.fileId;
         selectedFiles.delete(fileId);
         renderSelectedFilesTable();
@@ -507,6 +563,10 @@
      * @param {object} data The data returned by the Picker.
      */
     function pickerCallback(data) {
+      if (Date.now() >= pickerTokenExpiresAt) {
+        showMessage('Because the file picker was open for so long, it might not have displayed some files. If necessary, just try again.', 'info');
+      }
+
       if (data.action === google.picker.Action.PICKED) {
         const docs = data.docs;
         if (docs.length === 0) {
@@ -537,6 +597,7 @@
      * Initiates the search for linked slides with the selected files.
      */
     function startSearch() {
+      hideMessage();
       if (selectedFiles.size === 0) {
         showMessage('No presentations selected. Please select at least one.', 'error');
         return;
