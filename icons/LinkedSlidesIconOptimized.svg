@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg width="32" height="32" version="1.1" viewBox="0 0 8.4667 8.4667" xmlns="http://www.w3.org/2000/svg">
+ <rect y="5.1102e-9" width="8.4667" height="8.4667" rx=".52917" ry=".52917" fill="#fff" style="paint-order:stroke fill markers"/>
+ <g transform="matrix(1.3063 0 0 1.3063 -1.2515 -1.785)" stroke-linejoin="round">
+  <g transform="matrix(1.3397 0 0 1.3397 .16883 -2.5589)">
+   <rect x=".89153" y="5.0846" width="4.2333" height="2.3813" rx="0" ry="0" fill="#f0b100" stroke-width=".20638" style="paint-order:stroke fill markers"/>
+   <g transform="translate(-5.9605e-8 .017255)" fill="#fff">
+    <rect x="1.1561" y="5.3032" width="3.7042" height=".37798" rx="0" ry="0" stroke-width=".26203" style="paint-order:stroke fill markers"/>
+    <g transform="translate(-1.8521)">
+     <rect x="3.0082" y="6.0279" width="1.8521" height=".26458" rx="0" ry="0" stroke-width=".16482" style="paint-order:stroke fill markers"/>
+     <rect x="5.1378" y="6.4568" width=".26458" height=".75595" rx="0" ry="0" stroke-width=".16482" style="paint-order:stroke fill markers"/>
+     <rect x="5.5745" y="6.1583" width=".26458" height="1.0544" rx="0" ry="0" stroke-width=".19466" style="paint-order:stroke fill markers"/>
+     <rect x="6.0111" y="6.5439" width=".26458" height=".66889" rx="0" ry="0" stroke-width=".15504" style="paint-order:stroke fill markers"/>
+     <rect x="6.4478" y="6.0215" width=".26458" height="1.1913" rx="0" ry="0" stroke-width=".2069" style="paint-order:stroke fill markers"/>
+     <rect x="3.0082" y="6.488" width="1.8521" height=".26458" rx="0" ry="0" stroke-width=".16482" style="paint-order:stroke fill markers"/>
+     <rect x="3.0082" y="6.9482" width="1.8521" height=".26458" rx="0" ry="0" stroke-width=".16482" style="paint-order:stroke fill markers"/>
+    </g>
+   </g>
+  </g>
+  <g transform="matrix(2.7756 .0017513 -.0017513 2.7756 -12.14 -1.8113)" fill="#00e" stroke-width="1.0001">
+   <path d="m5.2629 1.2875c-0.21758 0-0.39688 0.17929-0.39688 0.39688v5.167e-4h0.26562v-5.167e-4c0-0.075578 0.05568-0.13126 0.13126-0.13126h0.27544c0.033842-0.11166 0.10932-0.20636 0.20774-0.26562zm0.72089 0c-0.21703 0-0.39843 0.17815-0.39843 0.39636v0.00103h0.26562c-2.5e-6 -3.458e-4 0-6.87e-4 0-0.00103 0-0.074951 0.056682-0.13074 0.13281-0.13074h0.52917c0.076126 0 0.13074 0.054615 0.13074 0.13074 0 3.394e-4 2.2e-6 6.949e-4 0 0.00103h0.26562v-0.00103c0-0.21703-0.17933-0.39636-0.39636-0.39636zm0 0.33228c-0.030193 0-0.052148 0.013722-0.061495 0.03669v5.167e-4c0.00171 0.00874 0.00258 0.017942 0.00258 0.027389v5.167e-4h0.26562v-5.167e-4c0-0.021885-0.00217-0.043637-0.00568-0.064596z" style="paint-order:stroke fill markers"/>
+   <path d="m6.5124 2.0798c0.21758 0 0.39687-0.17929 0.39687-0.39688v-5.167e-4h-0.26562v5.167e-4c0 0.075578-0.05568 0.13126-0.13126 0.13126h-0.27544c-0.033842 0.11166-0.10932 0.20636-0.20774 0.26562zm-0.72089 0c0.21703 0 0.39843-0.17815 0.39843-0.39636v-0.00103h-0.26562c2.5e-6 3.458e-4 0 6.87e-4 0 0.00103 0 0.074951-0.056682 0.13074-0.13281 0.13074h-0.52917c-0.076126 0-0.13074-0.054615-0.13074-0.13074 0-3.394e-4 -2.2e-6 -6.949e-4 0-0.00103h-0.26562v0.00103c0 0.21703 0.17933 0.39636 0.39636 0.39636zm0-0.33228c0.030193 0 0.052148-0.013722 0.061495-0.03669v-5.167e-4c-0.00171-0.00874-0.00258-0.017942-0.00258-0.027389v-5.167e-4h-0.26562v5.167e-4c0 0.021885 0.00217 0.043637 0.00568 0.064596z" style="paint-order:stroke fill markers"/>
+  </g>
+ </g>
+</svg>
