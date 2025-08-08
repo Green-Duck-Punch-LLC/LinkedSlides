@@ -445,8 +445,8 @@ function _showLicensingDialog(email) {
   template.config = config;
 
   const htmlOutput = template.evaluate()
-    .setWidth(1000)
-    .setHeight(1000)
+    .setWidth(550)
+    .setHeight(450)
     .setTitle('Subscription Required');
   SlidesApp.getUi().showModalDialog(htmlOutput, 'Subscription Required');
 }
