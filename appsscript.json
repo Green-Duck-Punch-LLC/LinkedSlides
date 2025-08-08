@@ -14,7 +14,7 @@
   "addOns": {
     "common": {
       "name": "Linked Slides Add-on",
-      "logoUrl": "https://www.gstatic.com/images/branding/product/2x/apps_script_64dp.png"
+      "logoUrl": "https://raw.githubusercontent.com/Green-Duck-Punch-LLC/LinkedSlides/refs/heads/main/icons/LinkedSlidesIcon32x32.png"
     }
   }
 }
