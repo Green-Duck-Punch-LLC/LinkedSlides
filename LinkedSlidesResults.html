@@ -370,8 +370,6 @@ environment, please contact Green Duck Punch, LLC.
   <div id="global-dropdown-container"></div>
 
   <script>
-    // Data passed from Apps Script. Using JSON.parse to ensure proper object conversion.
-    let tableData = JSON.parse('<?= displayRowsJson ?>');
     const presentationIds = JSON.parse('<?= presentationIdsJson ?>' || '[]');
 
     // activePresentationId is passed from the Apps Script server-side
@@ -435,6 +433,7 @@ environment, please contact Green Duck Punch, LLC.
      * Renders the table body based on the current tableData.
      */
     function renderTable() {
+      const tableData = filterTable();
       const tbody = document.getElementById('resultsTableBody');
       tbody.innerHTML = ''; // Clear existing rows
 
@@ -491,7 +490,7 @@ environment, please contact Green Duck Punch, LLC.
       let header = document.getElementById('th-' + columnKey);
       header.classList.add(direction);
 
-      tableData.sort((a, b) => {
+      originalTableData.sort((a, b) => {
         const valA = a[columnKey];
         const valB = b[columnKey];
 
@@ -553,7 +552,7 @@ environment, please contact Green Duck Punch, LLC.
           });
 
           checkboxes.forEach(cb => { cb.checked = sourcePageNumbersToSelect.has(cb.value); });
-          filterTable();
+          renderTable();
         })
         .withFailureHandler(err => {
           hideOverlayMessage();
@@ -706,7 +705,7 @@ environment, please contact Green Duck Punch, LLC.
           const checkboxId = "checkbox-" + key + "-" + value; // Unique ID for checkbox
 
           const label = document.createElement('label');
-          label.innerHTML = "<input type=\"checkbox\" id=\"" + checkboxId + "\" data-column=\"" + key + "\" value=\"" + value + "\" onchange=\"filterTable()\"> " + displayValue;
+          label.innerHTML = "<input type=\"checkbox\" id=\"" + checkboxId + "\" data-column=\"" + key + "\" value=\"" + value + "\" onchange=\"renderTable()\"> " + displayValue;
           innerDiv.appendChild(label);
 
           const checkbox = label.querySelector('input');
@@ -780,7 +779,7 @@ environment, please contact Green Duck Punch, LLC.
           cb.checked = false;
         });
       }
-      filterTable(); // Re-apply filters
+      renderTable(); // Re-apply filters
     }
 
     /**
@@ -868,6 +867,7 @@ environment, please contact Green Duck Punch, LLC.
 
     /**
      * Filters the table data based on selected dropdown values.
+     * @returns {Array} The filtered table data.
      */
     function filterTable() {
       // Update active filters based on current checkbox states
@@ -919,8 +919,7 @@ environment, please contact Green Duck Punch, LLC.
         });
       });
 
-      tableData = filteredData; // Update the data being displayed/sorted
-      renderTable(); // Re-render the filtered data
+      return filteredData;
     }
 
     // Close dropdowns when clicking outside. Using mousedown to avoid race
