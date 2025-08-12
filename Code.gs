@@ -57,6 +57,7 @@ function onOpen() {
     .createAddonMenu() // Appropriate for Google Workspace Add-on deployment
     .addItem('Find linked copies', 'launchLinkedSlides')
     .addItem('Contact support', 'showContactSupportDialog')
+    .addItem('Rate/review this add-on', 'showFeedbackDialog')
     .addToUi();
 }
 
@@ -74,9 +75,28 @@ function onInstall(e) {
  */
 function showContactSupportDialog() {
   const userKey = Session.getTemporaryActiveUserKey();
-  const htmlOutput = HtmlService.createHtmlOutput(`<p>Please email support@greenduckpunch.com and include the following user code in your message:</p><p><code>${userKey}</code></p>`)
-    .setTitle('Contact Support').setWidth(400).setHeight(200);
+  const htmlOutput = HtmlService.createHtmlOutput(`
+    <p>Having trouble with the add-on? We're here to help! If you can't find what you need on the <a href="https://www.greenduckpunch.com/LinkedSlides-help" target="_blank">help page</a>, please contact <a href="mailto:support@greenduckpunch.com" target="_blank">support@greenduckpunch.com</a> and include the following user code in your message:</p><p><code>${userKey}</code></p>
+    <p>We look forward to hearing from you!</p>
+    `)
+    .setTitle('Contact Support').setWidth(650).setHeight(200);
   SlidesApp.getUi().showModalDialog(htmlOutput, 'Contact Support');
+}
+
+/**
+ * Displays a dialog with instructions for leaving feedback.
+ */
+function showFeedbackDialog() {
+  const userKey = Session.getTemporaryActiveUserKey();
+  const url = PropertiesService.getScriptProperties().getProperties()['ADDON_MARKETPLACE_URL'] || "https://workspace.google.com/marketplace/search/%22finds%20linked%20copies%22?host=slides";
+  const htmlOutput = HtmlService.createHtmlOutput(`
+    <h2>Getting help or support</h2>
+    <p>Having trouble with the add-on? We're here to help! If you can't find what you need on the <a href="https://www.greenduckpunch.com/LinkedSlides-help" target="_blank">help page</a>, please contact <a href="mailto:support@greenduckpunch.com" target="_blank">support@greenduckpunch.com</a> before leaving a review so we can resolve your issue. Please include the following user code in your message:</p><p><code>${userKey}</code></p>
+    <h2>Rating and reviewing Linked Slides</h2>
+    <p>To rate or review the Linked Slides Add-on, go to <a href="${url}" target="_blank">its Google Workspace Marketplace page</a>, select the "Reviews" tab, and then provide a rating along with an optional review. We look forward to your feedback!</p>
+    `)
+    .setTitle('Rate/Review This Add-on').setWidth(650).setHeight(300);
+  SlidesApp.getUi().showModalDialog(htmlOutput, 'Rate/Review This Add-on');
 }
 
 /**
@@ -130,7 +150,7 @@ function findLinkedSlides() {
   }
 
   const oauthToken = _getOAuthToken();
-  const oauthTokenLifetimeSecsPropValue = PropertiesService.getScriptProperties().getProperties()['OAUTH_TOKEN_LIFETIME_SECONDS']
+  const oauthTokenLifetimeSecsPropValue = PropertiesService.getScriptProperties().getProperties()['OAUTH_TOKEN_LIFETIME_SECONDS'];
   const oauthTokenLifetimeSecs = parseInt(oauthTokenLifetimeSecsPropValue || '3600');
 
   // Retrieve previously selected files for this presentation from user properties.
