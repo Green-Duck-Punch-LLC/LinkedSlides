@@ -60,13 +60,17 @@ environment, please contact Green Duck Punch, LLC.
         #terms-checkbox {
             margin-right: 10px;
             border-color: red;
+            border-width: 3px;
             &:checked {
                 border-color: unset;
+                border-width: unset;
             }
         }
 
         #terms-checkbox-container label {
             text-align: left;
+            flex-grow: 1;
+            flex-basis: min-content;
         }
 
         #price-preview {
